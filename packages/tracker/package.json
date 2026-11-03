@@ -1,0 +1,16 @@
+{
+  "name": "@webpulse/tracker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --format=iife --global-name=WebPulse --target=es2020 --outfile=dist/tracker.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

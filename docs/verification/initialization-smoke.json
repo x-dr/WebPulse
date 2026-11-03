@@ -1,0 +1,49 @@
+{
+  "environment": "local development, real PostgreSQL, no mocked responses",
+  "viewports": [
+    {
+      "width": 1440,
+      "ready": true,
+      "noOverflow": true,
+      "pageErrors": 0
+    },
+    {
+      "width": 1024,
+      "ready": true,
+      "noOverflow": true,
+      "pageErrors": 0
+    },
+    {
+      "width": 768,
+      "ready": true,
+      "noOverflow": true,
+      "pageErrors": 0
+    },
+    {
+      "width": 390,
+      "ready": true,
+      "noOverflow": true,
+      "pageErrors": 0
+    }
+  ],
+  "health": [
+    {
+      "check": "live",
+      "http_status": 200,
+      "body": {
+        "status": "ok",
+        "service": "webpulse",
+        "check": "live"
+      }
+    },
+    {
+      "check": "ready",
+      "http_status": 200,
+      "body": {
+        "status": "ok",
+        "service": "webpulse",
+        "check": "ready"
+      }
+    }
+  ]
+}

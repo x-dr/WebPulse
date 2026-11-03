@@ -1,0 +1,25 @@
+{
+  "name": "@webpulse/dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@webpulse/shared": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "antd": "6.6.8",
+    "@tanstack/react-query": "5.105.3"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "vite": "7.3.7"
+  }
+}
