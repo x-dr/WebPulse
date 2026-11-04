@@ -12,7 +12,7 @@
     "dev": "pnpm --filter @webpulse/shared build && pnpm --parallel --filter @webpulse/server --filter @webpulse/dashboard dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm --filter @webpulse/shared build && pnpm -r typecheck && tsc -p tsconfig.tools.json",
-    "lint": "eslint .",
+    "lint": "oxlint --deny-warnings .",
     "format:check": "prettier --check .",
     "test": "pnpm --filter @webpulse/shared build && vitest run --project unit",
     "test:integration": "pnpm --filter @webpulse/shared build && vitest run --project integration",
@@ -21,15 +21,12 @@
     "test:postgres": "pnpm --filter @webpulse/shared build && vitest run --project postgres"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "vitest": "3.2.7",
-    "eslint": "10.14.0",
-    "@eslint/js": "10.0.1",
-    "typescript-eslint": "8.72.1",
-    "globals": "16.5.0",
     "prettier": "3.9.10",
     "@electric-sql/pglite": "0.3.16",
     "@playwright/test": "1.64.1",
-    "@types/node": "24.19.2"
+    "@types/node": "24.19.2",
+    "oxlint": "1.91.0"
   }
 }

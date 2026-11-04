@@ -1,0 +1,112 @@
+{
+  "verified_on": "2026-11-04",
+  "timezone": "Asia/Shanghai",
+  "runtime": {
+    "node": "v24.18.0",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "toolchain": {
+    "typescript": "7.0.2",
+    "oxlint": "1.91.0",
+    "prettier": "3.9.10",
+    "pnpm": "10.20.0"
+  },
+  "checks": [
+    {
+      "command": "pnpm install --frozen-lockfile --offline",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm lint",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm typecheck",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm build",
+      "status": "passed",
+      "packages": 4
+    },
+    {
+      "command": "pnpm test",
+      "status": "passed",
+      "tests": 20
+    },
+    {
+      "command": "pnpm test:integration",
+      "status": "passed",
+      "tests": 4,
+      "database": "PGlite in memory"
+    },
+    {
+      "command": "pnpm test:postgres",
+      "status": "passed",
+      "tests": 3,
+      "database": "local webpulse_dev, isolated test schemas"
+    },
+    {
+      "command": "pnpm test:e2e",
+      "status": "passed",
+      "tests": 4,
+      "browser": "existing Chromium executable",
+      "responses": "mocked"
+    },
+    {
+      "command": "compiled API Fastify inject",
+      "status": "passed",
+      "endpoints": ["live", "ready"],
+      "readiness_dependency": "test double"
+    }
+  ],
+  "migrated_rules": 85,
+  "rule_probes": [
+    {
+      "name": "undefined.mjs",
+      "exit_code": 1,
+      "matched_expectation": true
+    },
+    {
+      "name": "assignment.ts",
+      "exit_code": 1,
+      "matched_expectation": true
+    },
+    {
+      "name": "any.ts",
+      "exit_code": 1,
+      "matched_expectation": true
+    },
+    {
+      "name": "duplicate.mjs",
+      "exit_code": 1,
+      "matched_expectation": true
+    },
+    {
+      "name": "octal.mjs",
+      "exit_code": 1,
+      "matched_expectation": true
+    },
+    {
+      "name": "node.mjs",
+      "exit_code": 0,
+      "matched_expectation": true
+    },
+    {
+      "name": "apps/dashboard/src/browser.tsx",
+      "exit_code": 0,
+      "matched_expectation": true
+    },
+    {
+      "name": "apps/dashboard/src/readonly.tsx",
+      "exit_code": 1,
+      "matched_expectation": true
+    }
+  ],
+  "not_verified": [
+    "other platforms or CPU architectures",
+    "editor language services",
+    "production containers or deployment"
+  ]
+}

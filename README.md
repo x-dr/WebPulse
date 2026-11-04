@@ -1,8 +1,8 @@
 # WebPulse · 网站脉搏
 
-轻量、自托管的网站流量统计系统。当前已建立工程骨架，可运行前后端、检查数据库就绪状态并执行版本化迁移。**登录、站点管理、采集、报表和实时统计尚未实现。**
+轻量、自托管的网站流量统计系统。当前已完成工程初始化和 M0 设计冻结，可运行前后端、检查数据库就绪状态并执行版本化迁移。**登录、站点管理、采集、报表和实时统计尚未实现。**
 
-采用 Node.js 24、pnpm 10、Fastify 5、TypeScript strict、React 19、Ant Design 6、TanStack Query 与 PostgreSQL 17。ECharts、路由和业务插件在对应模块实施时引入。实际版本以各 `package.json` 与 `pnpm-lock.yaml` 为准。
+采用 Node.js 24、pnpm 10、Fastify 5、TypeScript 7.0.2 strict、React 19、Ant Design 6、TanStack Query 与 PostgreSQL 17。ECharts、路由和业务插件在对应模块实施时引入。实际版本以各 `package.json` 与 `pnpm-lock.yaml` 为准。
 
 ## 本地启动
 
@@ -50,7 +50,13 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-`test` 检查配置、健康接口和已结束会话指标；`test:integration` 用内存 PGlite 检查迁移，不需要 Docker。`test:postgres` 显式连接 `.env` 指定的开发库，在随机生成的独立 schema 中验证真实并发、回滚与就绪检查，结束后只清理该测试 schema；**仅在开发数据库执行**。
+`typecheck` 和构建使用 TypeScript 7.0.2 的原生 `tsc`；`lint` 使用 Oxlint 1.91.0，任何警告或错误均阻止通过；`format:check` 继续使用 Prettier。项目不再依赖 ESLint、typescript-eslint 或 TS6 兼容包。
+
+规则集中在 `.oxlintrc.json`，沿用原有推荐规则及目录排除。显式启用尚处实验阶段的 `no-undef` 和 `no-useless-assignment`，避免迁移时遗漏既有检查；TS/TSX 的 `no-undef` 仍交由编译器处理。`no-dupe-args`、`no-octal` 由 ESM 严格模式语法检查覆盖。浏览器目录使用 `browser` 环境，Node 环境和原有覆盖关系保留。当前未启用依赖类型信息的 lint 规则；类型校验仍由 `pnpm typecheck` 执行。
+
+TypeScript 7 和 Oxlint 通过平台相关的可选依赖提供原生程序，安装时不要禁用 optional dependencies；不同操作系统/架构应使用锁文件重新安装依赖。编辑器的 TypeScript 服务与 Oxlint 扩展需分别配置，命令行升级不会自动更改编辑器设置。
+
+`test` 检查配置、健康接口和已结束会话指标；`test:integration` 用内存 PGlite 检查迁移及 M0 查询设计探针，不需要 Docker。`test:postgres` 显式连接 `.env` 指定的开发库，在随机生成的独立 schema 中验证迁移并发、回滚、就绪检查及 M0 站点锁协议，结束后只清理该测试 schema；**仅在开发数据库执行**。
 
 `test:e2e` 自动启动 Vite，使用模拟健康响应验证 1440px/390px 下的错误、重试、键盘和响应式行为，不代表生产端到端验证。可用 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 指定已有 Chromium。浏览器、真实 PostgreSQL 和静态检查的实际结果见 [初始化验证记录](docs/初始化验证记录.md)。
 
@@ -75,4 +81,4 @@ docker compose -f compose.dev.yml stop db
 | `design`           | 原技术设计、评审报告与参考快照                   |
 | `docs`             | 实施进度与当前验证证据                           |
 
-本次范围为工程初始化，下一阶段先处理设计评审 R01–R07，再进入 M1 采集链路。详见 [实施计划与进度](docs/实施计划与进度.md)及 [设计评审](design/WebPulse-技术文档评审与优化建议.md)。
+M0 已冻结 R01–R07 的统计、并发及删除恢复契约，明确 R08–R14 的后续落点。下一阶段为 M1 采集链路（管理员/站点基础、同意、清洗、PV、互动、心跳和会话）。详见 [M0 设计冻结与验收](docs/M0设计冻结与验收.md)、[实施计划与进度](docs/实施计划与进度.md)及 [设计评审](design/WebPulse-技术文档评审与优化建议.md)。

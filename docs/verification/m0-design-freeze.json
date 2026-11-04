@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-04",
+  "timezone": "Asia/Shanghai",
+  "milestone": "M0",
+  "design_version": "1.1.0",
+  "status": "complete",
+  "scope": "Design contracts and SQL/locking mechanism probes; not application acceptance",
+  "checks": [
+    {
+      "command": "pnpm typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm format:check",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm exec vitest run --project unit --project integration",
+      "result": "passed",
+      "unit": 20,
+      "integration": 9
+    },
+    {
+      "command": "pnpm exec vitest run --project postgres",
+      "result": "passed",
+      "tests": 7,
+      "isolation": "Random test-owned schemas in the local development database; removed after testing"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "new_design_probes": {
+    "sql": 5,
+    "real_postgres_locks": 4
+  },
+  "documents": {
+    "documents": 8,
+    "relative_links_and_anchors": 52,
+    "fenced_blocks": 51,
+    "json_examples": 12,
+    "main_chapters": 19,
+    "reference_blocks_unchanged": 7,
+    "acceptance_scenarios": 35,
+    "dst_fixture_offsets": 2
+  },
+  "corrected_initial_attempts": [
+    "Test connection type declaration corrected before successful typecheck",
+    "Sandbox EPERM on local PostgreSQL connection; authorized rerun passed"
+  ],
+  "not_run": [
+    "Full application build",
+    "Playwright",
+    "Collection API and SDK acceptance",
+    "Worker crash recovery",
+    "Encrypted external deletion journal",
+    "Backup restore and deletion replay",
+    "Production load tests"
+  ],
+  "next_milestone": "M1"
+}
