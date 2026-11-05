@@ -4,6 +4,7 @@ import { readDeletionEncryptor, readDeletionKey } from './modules/deletion/encry
 import { readJournalClient } from './modules/deletion/journal-client.js';
 import { buildApp } from './app.js';
 import { loadWorkspaceEnv, readConfig } from './config/env.js';
+import { startupFailureMessage } from './config/errors.js';
 import { checkDatabaseReady, createPool } from './db/database.js';
 import { loadMigrations } from './db/migrations.js';
 
@@ -66,8 +67,7 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch(() => {
-  // Driver/config errors can contain addresses or credentials. Keep startup output bounded.
-  process.stderr.write('WebPulse startup failed; check environment, port and migration files.\n');
+main().catch((error) => {
+  process.stderr.write(startupFailureMessage(error));
   process.exitCode = 1;
 });

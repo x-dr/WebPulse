@@ -15,6 +15,7 @@ test -f .env || cp .env.example .env
 docker compose -f compose.dev.yml up -d --wait db
 pnpm db:migrate
 # 按下方 M1 配置段创建三份独立密钥并补齐 .env，再启动。
+# 从旧版 .env 升级时也需要检查这三项，数据库配置完整并不足以启动 API。
 pnpm dev
 ```
 
@@ -34,6 +35,7 @@ curl -fsS http://127.0.0.1:3000/api/v1/health/ready
 - `live`：进程存活返回 200，不依赖数据库。
 - `ready`：数据库连通、迁移名称/校验和匹配、恢复闸门允许开放时返回 200；未迁移、连接失败、版本不匹配或恢复未验证时返回 503。
 - 启动 API 不会自动执行迁移。环境参数非法或缺少数据库密码时立即启动失败。
+- 启动日志会提示缺失或非法的配置名（例如 `Missing or invalid VISITOR_HMAC_KEY`），不输出配置值。前端代理出现 `ECONNREFUSED 127.0.0.1:3000` 时先检查后端启动日志；缺少 HMAC 配置按下方步骤创建首次密钥或接回原有密钥，随后重启 `pnpm dev`。根目录 `.env` 修改不会触发 Node 自动重启。
 - `pnpm db:migrate` 使用单连接事务与 PostgreSQL advisory lock；整批失败回滚，重复执行无新增迁移。已应用 SQL 不应修改，后续增加新编号 SQL；M1 新增 `002_collection.sql`，M2 新增 `003_reporting.sql`，M4 新增 `004_deployment.sql`。
 - 应用迁移位于 `apps/server/migrations/`；`001_init.sql` 保留参考结构的 16 张业务表，由迁移器接管事务，另外维护 `schema_migrations`。002 补齐引用索引、规则快照、活动顺序、身份 epoch 与采集事实字段；003 补齐覆盖/缺口、汇总版本、冻结扫描和独立删除任务。
 
