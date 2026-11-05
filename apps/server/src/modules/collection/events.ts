@@ -157,7 +157,7 @@ export async function acceptEvents(ctx: CollectionContext, events: CollectionEve
         'UPDATE sessions SET interactions=interactions+1,last_activity_at=$3 WHERE site_id=$1 AND id=$2',
         [ctx.site.id, session.id, ctx.now],
       );
-      ctx.dirty.add(session.started_at.toISOString());
+      // The closed-session denominator changes only when this session closes.
     }
   }
 }

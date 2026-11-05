@@ -29,5 +29,6 @@ export async function acceptHeartbeat(ctx: CollectionContext, body: HeartbeatBod
     FROM measured m WHERE site_id=$1 AND id=$2`,
     [ctx.site.id, session.id, ctx.now, delta, page.occurred_at],
   );
-  ctx.dirty.add(session.started_at.toISOString());
+  // Open-session duration is excluded from published totals. Closing the session
+  // marks its start bucket, so heartbeats need no hot-bucket write.
 }

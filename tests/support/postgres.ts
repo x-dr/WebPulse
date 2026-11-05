@@ -22,7 +22,8 @@ export async function fixture() {
     ipKey: randomBytes(32),
     csrfKey: randomBytes(32),
   };
-  const app = buildApp({ ready: async () => {}, pool, security });
+  const deletionKey = { key: randomBytes(32), keyId: 'test-v1' };
+  const app = buildApp({ ready: async () => {}, pool, security, deletionKey });
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
     const client = await pool.connect();
@@ -147,6 +148,7 @@ export async function fixture() {
     admin,
     schema,
     security,
+    deletionKey,
     site,
     cid,
     pv,

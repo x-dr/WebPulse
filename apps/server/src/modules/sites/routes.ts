@@ -97,6 +97,11 @@ export function registerSites(app: FastifyInstance, auth: AuthService, adminOrig
         const body = request.body;
         origins(body.primary_origin, body.allowed_origins);
         const timezone = body.timezone ?? 'Asia/Shanghai';
+        try {
+          new Intl.DateTimeFormat('en', { timeZone: timezone }).format();
+        } catch {
+          throw new ApiError(400, 'invalid_timezone');
+        }
         if (
           !(await client.query('SELECT 1 FROM pg_timezone_names WHERE name=$1', [timezone]))
             .rowCount

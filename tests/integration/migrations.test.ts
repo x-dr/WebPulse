@@ -25,13 +25,33 @@ afterEach(async () => {
 });
 
 describe('migration lifecycle on PGlite (not real PostgreSQL concurrency)', () => {
+  it('upgrades an existing M1 site transactionally and initializes all coverage without rewriting its identity', async () => {
+    await migrate(connection, migrations.slice(0, 2));
+    await database.query(
+      "INSERT INTO sites(public_id,name,primary_origin,allowed_origins,created_at) VALUES ('site_upgrade','Existing','https://test','[]','2026-11-01Z')",
+    );
+    expect(await migrate(connection, migrations)).toEqual(['003_reporting.sql']);
+    expect((await database.query('SELECT public_id FROM sites')).rows).toEqual([
+      { public_id: 'site_upgrade' },
+    ]);
+    const rows = (
+      await database.query<{ layer: string; observed: string; available: string }>(
+        'SELECT layer,observed_from::text AS observed,available_from::text AS available FROM site_data_coverage ORDER BY layer',
+      )
+    ).rows;
+    expect(rows).toHaveLength(6);
+    expect(
+      rows.every((row) => row.observed === row.available && row.observed.startsWith('2026-11-01')),
+    ).toBe(true);
+    expect(await migrate(connection, migrations)).toEqual([]);
+  });
   it('creates reference tables, rule snapshots and migration history and can be rerun', async () => {
     expect(await migrate(connection, migrations)).toEqual(migrations.map((item) => item.name));
     expect(await migrate(connection, migrations)).toEqual([]);
     const result = await database.query<{ count: number }>(
       "SELECT count(*)::integer AS count FROM pg_tables WHERE schemaname = 'public'",
     );
-    expect(result.rows[0]?.count).toBe(18);
+    expect(result.rows[0]?.count).toBe(25);
   });
 
   it('rejects changed SQL and unknown or missing migration history', async () => {

@@ -8,12 +8,18 @@ import { registerAuth } from './modules/auth/routes.js';
 import { registerSites } from './modules/sites/routes.js';
 import { registerCollection } from './modules/collection/routes.js';
 import { registerHealthRoutes } from './modules/maintenance/health.js';
+import { registerReports } from './modules/reports/routes.js';
+import { registerRetention } from './modules/retention/routes.js';
+import { registerDeletion } from './modules/deletion/routes.js';
+import type { DeletionKey } from './modules/deletion/encryption.js';
+import { registerDiagnostics } from './modules/maintenance/diagnostics.js';
 
 export function buildApp(options: {
   ready: () => Promise<void>;
   logLevel?: string;
   pool?: pg.Pool;
   security?: SecurityConfig;
+  deletionKey?: DeletionKey;
 }) {
   const app = Fastify({
     bodyLimit: 16 * 1024,
@@ -61,6 +67,10 @@ export function buildApp(options: {
     const auth = registerAuth(app, options.pool, options.security);
     registerSites(app, auth, options.security.adminOrigin);
     registerCollection(app, options.pool, options.security);
+    registerReports(app, options.pool, auth);
+    registerRetention(app, auth);
+    registerDeletion(app, auth, options.deletionKey);
+    registerDiagnostics(app, auth);
     app.get('/tracker.js', async (_request, reply) => {
       reply
         .type('application/javascript; charset=utf-8')

@@ -7,3 +7,4 @@ export {
 } from './metrics.js';
 export * from './collection.js';
 export * from './privacy.js';
+export * from './reporting.js';

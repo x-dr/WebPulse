@@ -1,5 +1,6 @@
 import { readSecurityConfig } from './config/security.js';
-import { sessionCloser } from './modules/sessions/worker.js';
+import { maintenanceWorker } from './modules/maintenance/worker.js';
+import { readDeletionKey } from './modules/deletion/encryption.js';
 import { buildApp } from './app.js';
 import { loadWorkspaceEnv, readConfig } from './config/env.js';
 import { checkDatabaseReady, createPool } from './db/database.js';
@@ -10,13 +11,23 @@ async function main(): Promise<void> {
   const config = readConfig();
   const migrations = await loadMigrations();
   const pool = createPool(config.database);
+  const security = readSecurityConfig();
+  const deletionKey = readDeletionKey();
+  if (
+    deletionKey &&
+    [security.visitorKey, security.ipKey, security.csrfKey].some((key) =>
+      key.equals(deletionKey.key),
+    )
+  )
+    throw new Error('Independent deletion key required');
   const app = buildApp({
     ready: () => checkDatabaseReady(pool, migrations),
     logLevel: config.logLevel,
     pool,
-    security: readSecurityConfig(),
+    security,
+    ...(deletionKey ? { deletionKey } : {}),
   });
-  const stopCloser = sessionCloser(pool).start();
+  const stopCloser = maintenanceWorker(pool, deletionKey).start();
   app.addHook('onClose', async () => {
     await stopCloser();
     await pool.end();

@@ -1,6 +1,6 @@
 # WebPulse · 网站脉搏
 
-轻量、自托管的网站流量统计系统。当前已完成工程初始化、M0 设计冻结和 **M1 采集链路**：管理员认证与站点 API、隐私清洗、PV/互动/心跳、会话关闭和浏览器 SDK 已实现。**报表聚合、删除执行器、后台业务页面和 SSE 尚未实现。** 前端仍为初始化预览页，M1 可通过 API/SDK 使用。
+轻量、自托管的网站流量统计系统。当前已完成工程初始化、M0 设计冻结、M1 采集链路与 **M2 查询与聚合**：采集 SDK、统计 API、精确去重/同期比较、重算冻结、保留清理及删除状态机已实现。生产删除受 M4 独立清单确认闸门保护，默认停在 journal 阶段。前端仍为初始化预览页，后台业务页面和 SSE 在 M3/M4 实施。
 
 采用 Node.js 24、pnpm 10、Fastify 5、TypeScript 7.0.2 strict、React 19、Ant Design 6、TanStack Query 与 PostgreSQL 17。ECharts、路由和业务插件在对应模块实施时引入。实际版本以各 `package.json` 与 `pnpm-lock.yaml` 为准。
 
@@ -34,8 +34,8 @@ curl -fsS http://127.0.0.1:3000/api/v1/health/ready
 - `live`：进程存活返回 200，不依赖数据库。
 - `ready`：数据库连通，且全部迁移名称和 SHA-256 校验和匹配时返回 200；未迁移、连接失败、迁移被修改或版本不匹配时返回 503。
 - 启动 API 不会自动执行迁移。环境参数非法或缺少数据库密码时立即启动失败。
-- `pnpm db:migrate` 使用单连接事务与 PostgreSQL advisory lock；整批失败回滚，重复执行无新增迁移。已应用 SQL 不应修改，后续增加新编号 SQL；M1 已新增 `002_collection.sql`。
-- 应用迁移位于 `apps/server/migrations/`；`001_init.sql` 保留参考结构的 16 张业务表，由迁移器接管事务，另外维护 `schema_migrations`。002 补齐引用索引、规则快照、活动顺序、身份 epoch 与采集事实字段。
+- `pnpm db:migrate` 使用单连接事务与 PostgreSQL advisory lock；整批失败回滚，重复执行无新增迁移。已应用 SQL 不应修改，后续增加新编号 SQL；M1 新增 `002_collection.sql`，M2 新增 `003_reporting.sql`。
+- 应用迁移位于 `apps/server/migrations/`；`001_init.sql` 保留参考结构的 16 张业务表，由迁移器接管事务，另外维护 `schema_migrations`。002 补齐引用索引、规则快照、活动顺序、身份 epoch 与采集事实字段；003 补齐覆盖/缺口、汇总版本、冻结扫描和独立删除任务。
 
 ## 验证命令
 
@@ -58,7 +58,7 @@ pnpm test:sdk
 
 TypeScript 7 和 Oxlint 通过平台相关的可选依赖提供原生程序，安装时不要禁用 optional dependencies；不同操作系统/架构应使用锁文件重新安装依赖。编辑器的 TypeScript 服务与 Oxlint 扩展需分别配置，命令行升级不会自动更改编辑器设置。
 
-`test` 检查配置、健康、指标、清洗、HMAC 和资源限额；`test:integration` 用内存 PGlite 检查迁移及 M0 查询设计探针，不需要 Docker。`test:postgres` 显式连接 `.env` 指定的开发库，在随机生成的独立 schema 中验证迁移、认证、采集、会话、暂停排空、公平性、取消回滚及索引计划，结束后只清理该测试 schema；**仅在开发数据库执行**。
+`test` 检查配置、健康、指标、清洗、HMAC、资源限额、DST 和加密边界；`test:integration` 用内存 PGlite 检查迁移、既有 M1 升级及 M0 设计探针，不需要 Docker。`test:postgres` 显式连接 `.env` 指定的开发库，在随机独立 schema 中验证采集/并发、统计/聚合、冻结/清理、删除/重建和索引计划，结束后只清理该测试 schema；**仅在开发数据库执行**。
 
 `test:e2e` 自动启动 Vite，使用模拟健康响应验证 1440px/390px 下的错误、重试、键盘和响应式行为，不代表生产端到端验证。可用 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 指定已有 Chromium。浏览器、真实 PostgreSQL 和静态检查的实际结果见 [初始化验证记录](docs/初始化验证记录.md)。
 
@@ -74,7 +74,7 @@ docker compose -f compose.dev.yml stop db
 
 | 路径               | 职责                                       |
 | ------------------ | ------------------------------------------ |
-| `apps/server`      | API、认证、站点、采集、会话、迁移与 CLI    |
+| `apps/server`      | API、认证、采集、报表、维护、迁移与 CLI    |
 | `apps/dashboard`   | React 入口、主题和连接状态页面             |
 | `packages/shared`  | 公共 Schema、类型、隐私清洗与指标定义      |
 | `packages/tracker` | 无框架采集 SDK、身份、生命周期与传输       |
@@ -83,7 +83,7 @@ docker compose -f compose.dev.yml stop db
 | `design`           | 原技术设计、评审报告与参考快照             |
 | `docs`             | 实施进度与当前验证证据                     |
 
-M1 的代码、并发/隐私证据及边界见 [M1 采集链路与验收](docs/M1采集链路与验收.md)。下一阶段为 **M2 查询与聚合**，继续处理精确去重、同期比较、重算、冻结、清理和删除对账；详见 [实施计划与进度](docs/实施计划与进度.md)。
+M1 的并发/隐私证据见 [M1 采集链路与验收](docs/M1采集链路与验收.md)；统计接口、重算冻结、清理预览、删除闸门与运维命令见 [M2 查询聚合与验收](docs/M2查询聚合与验收.md)。下一阶段为 **M3 米色后台**，详见 [实施计划与进度](docs/实施计划与进度.md)。
 
 ## M1 本地配置与管理员
 
@@ -127,4 +127,4 @@ pnpm dev
 
 M1 管理 API 使用 `/api/v1/auth/login`、`GET /auth/session`、`POST /auth/logout`、`GET/POST /sites`、`GET/PATCH /sites/:site_id`。写请求必须带精确 `Origin`、管理 cookie 和登录返回的 `X-CSRF-Token`。站点创建字段、PATCH 白名单及采集请求示例见 [M1 文档](docs/M1采集链路与验收.md)和 [设计契约](design/WebPulse-项目技术文档.md#113-登录与站点)。
 
-服务端保持 `trustProxy=false`，只使用 socket 地址生成站点化 IP HMAC。M4 配置可信代理前，不应把本开发入口经任意代理投入生产并宣称 IP 指标准确。M1 没有清理历史数据或运行删除任务；保留设置记录策略，实际执行在 M2。
+服务端保持 `trustProxy=false`，只使用 socket 地址生成站点化 IP HMAC。M4 配置可信代理前，不应把本开发入口经任意代理投入生产并宣称 IP 指标准确。M2 通过独立保留预览/确认接口变更策略，后台仅越过实际连续冻结水位清理；扩大窗口不会恢复已清理数据。删除任务需要另配稳定独立的 `DELETION_ENCRYPTION_KEY_FILE`，M4 journal 适配器未接入时不会执行破坏性删除；详见 M2 文档。本次未迁移默认开发 schema、未执行既有数据清理或真实删除。

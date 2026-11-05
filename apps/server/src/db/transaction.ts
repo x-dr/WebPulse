@@ -6,6 +6,7 @@ export async function transaction<T>(
   pool: pg.Pool,
   budget: RequestBudget,
   work: (client: pg.PoolClient) => Promise<T>,
+  options: { snapshot?: boolean; readOnly?: boolean } = {},
 ): Promise<T> {
   const { signal, deadline } = budget;
   signal.throwIfAborted();
@@ -59,7 +60,9 @@ export async function transaction<T>(
   const timer = setTimeout(destroy, Math.max(1, Math.min(4000, deadline - Date.now())));
   try {
     signal.throwIfAborted();
-    await client.query('BEGIN ISOLATION LEVEL READ COMMITTED');
+    await client.query(
+      `BEGIN ISOLATION LEVEL ${options.snapshot ? 'REPEATABLE READ' : 'READ COMMITTED'}${options.readOnly ? ' READ ONLY' : ''}`,
+    );
     await client.query(
       "SET LOCAL lock_timeout = '750ms'; SET LOCAL statement_timeout = '1500ms'; SET LOCAL transaction_timeout = '4s'; SET LOCAL idle_in_transaction_session_timeout = '1500ms'",
     );

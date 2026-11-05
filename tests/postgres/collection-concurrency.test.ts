@@ -181,7 +181,7 @@ describe('M1 API concurrency and transaction deadlines', () => {
     ];
     const rows = (
       await f.pool.query(
-        "SELECT indexname FROM pg_indexes WHERE schemaname=$1 AND indexname=ANY($2::text[]) AND indexdef NOT LIKE '% WHERE %'",
+        'SELECT c.relname AS indexname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_index i ON i.indexrelid=c.oid WHERE n.nspname=$1 AND c.relname=ANY($2::text[]) AND i.indpred IS NULL',
         [f.schema, expected],
       )
     ).rows;

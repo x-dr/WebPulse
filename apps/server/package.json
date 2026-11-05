@@ -13,7 +13,10 @@
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "db:migrate": "node --import tsx src/cli.ts database:migrate",
-    "admin:create": "node --import tsx src/cli.ts admin:create"
+    "admin:create": "node --import tsx src/cli.ts admin:create",
+    "maintenance:run": "node --import tsx src/cli.ts maintenance:run",
+    "visitor:delete": "node --import tsx src/cli.ts visitor:delete",
+    "deletion:retry": "node --import tsx src/cli.ts deletion:retry"
   },
   "dependencies": {
     "@webpulse/shared": "workspace:*",

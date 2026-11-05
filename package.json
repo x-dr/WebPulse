@@ -20,7 +20,10 @@
     "db:migrate": "pnpm --filter @webpulse/server db:migrate",
     "test:postgres": "pnpm --filter @webpulse/shared build && pnpm --filter @webpulse/tracker build && vitest run --project postgres",
     "admin:create": "pnpm --filter @webpulse/server admin:create",
-    "test:sdk": "pnpm --filter @webpulse/shared build && pnpm --filter @webpulse/tracker build && playwright test -c playwright.sdk.config.ts"
+    "test:sdk": "pnpm --filter @webpulse/shared build && pnpm --filter @webpulse/tracker build && playwright test -c playwright.sdk.config.ts",
+    "maintenance:run": "pnpm --filter @webpulse/server maintenance:run",
+    "visitor:delete": "pnpm --filter @webpulse/server visitor:delete",
+    "deletion:retry": "pnpm --filter @webpulse/server deletion:retry"
   },
   "devDependencies": {
     "typescript": "7.0.2",

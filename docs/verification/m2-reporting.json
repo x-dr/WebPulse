@@ -1,0 +1,187 @@
+{
+  "date": "2026-11-05",
+  "stage": "M2",
+  "status": "local_implementation_verified",
+  "environment": {
+    "node": "v24.18.0",
+    "pnpm": "10.20.0",
+    "postgres": "17.11",
+    "browser": "Chrome 151.0.7922.71"
+  },
+  "checks": {
+    "frozen_lockfile_offline_install": "passed",
+    "typecheck": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "format": "passed",
+    "diff_check": "passed"
+  },
+  "tests": {
+    "unit": 43,
+    "pglite": 10,
+    "postgres": 67,
+    "sdk_browser": 19,
+    "dashboard_browser": 4,
+    "total": 143,
+    "vitest_success": true,
+    "sdk_unexpected": 0,
+    "dashboard_unexpected": 0
+  },
+  "test_files": [
+    {
+      "file": "tests/unit/config.test.ts",
+      "tests": 10,
+      "status": "passed"
+    },
+    {
+      "file": "tests/unit/health.test.ts",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "file": "tests/unit/metrics.test.ts",
+      "tests": 6,
+      "status": "passed"
+    },
+    {
+      "file": "tests/unit/privacy.test.ts",
+      "tests": 18,
+      "status": "passed"
+    },
+    {
+      "file": "tests/unit/reporting.test.ts",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "file": "tests/integration/migrations.test.ts",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "file": "tests/integration/statistics-contract.test.ts",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/aggregation-load.test.ts",
+      "tests": 2,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/aggregation.test.ts",
+      "tests": 6,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/auth-sites.test.ts",
+      "tests": 6,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/collection-concurrency.test.ts",
+      "tests": 10,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/collection.test.ts",
+      "tests": 18,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/deletion.test.ts",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/migrations.test.ts",
+      "tests": 3,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/reporting-boundaries.test.ts",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/reporting.test.ts",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/retention.test.ts",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "file": "tests/postgres/site-locks.test.ts",
+      "tests": 4,
+      "status": "passed"
+    }
+  ],
+  "migrations": [
+    {
+      "name": "001_init.sql",
+      "sha256": "e5530330ec0ffbf6f0d67c3cd620fc0f5f37bd7609e7fb31d868db7a800cc8c9"
+    },
+    {
+      "name": "002_collection.sql",
+      "sha256": "90583bbb09b102babeb22bf1c40e1674975318e491903c98d997e621c918445b"
+    },
+    {
+      "name": "003_reporting.sql",
+      "sha256": "8adecd1740ea7e7ae312d53e88d43b6b1347302b21a3a69a9b62d62c6e9be333"
+    }
+  ],
+  "load_smoke": {
+    "scope": "local PostgreSQL smoke; not M5 sustained capacity",
+    "requests": 64,
+    "sites": 5,
+    "collection_p95_ms": 101.81631700000003,
+    "collection_p99_ms": 109.09998399999995,
+    "cold_site_p95_ms": 101.81631700000003,
+    "lock_wait_observations": 15,
+    "lock_samples": 92,
+    "aggregate_retries": 4,
+    "max_transaction_ms": 52.31055399999991,
+    "oldest_backlog_seconds": 0.068388,
+    "remaining_dirty_buckets": 0,
+    "peak_observed_active_pool_connections": 3,
+    "pool_limit": 8,
+    "rounds": 2
+  },
+  "verification": {
+    "exact_range_distinct": true,
+    "full_plus_partial_union": true,
+    "closed_at_cutoff_inclusive": true,
+    "pv_end_exclusive": true,
+    "dst_earlier_and_shift_forward": true,
+    "non_hour_timezone_clipping": true,
+    "replacement_rankings_and_shared_revision": true,
+    "serialization_retry": true,
+    "independent_zero_bucket_freeze": true,
+    "atomic_finalization_and_cursor": true,
+    "coverage_retention_resume": true,
+    "visitor_multiple_epochs_and_shared_ip": true,
+    "journal_gate_blocks_destructive_batches": true,
+    "site_deletion_preserves_job_and_tombstone": true,
+    "precommit_failure_rollback_and_resume": true,
+    "lease_exclusion": true,
+    "old_m1_migration_upgrade": true
+  },
+  "boundaries": {
+    "database_schema": "random isolated test schemas only; default schema not migrated",
+    "production_deletion": "blocked at journal until M4 independent adapter is supplied",
+    "journal_evidence": "injected idempotent in-memory test adapter only",
+    "crash_evidence": "transaction precommit fault injection; no real process kill or power loss",
+    "deployment_performed": false,
+    "existing_user_data_deleted": false,
+    "m3_ui_implemented": false,
+    "m4_backup_replay_verified": false,
+    "m5_sustained_capacity_verified": false
+  },
+  "resolved_test_isolation_issues": [
+    "Scoped catalog-index check avoids dropped OIDs in parallel schemas",
+    "Separate Playwright dashboard/sdk output directories prevent artifact removal"
+  ]
+}
