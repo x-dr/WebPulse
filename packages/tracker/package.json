@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "esbuild": "0.25.12"
+  },
+  "dependencies": {
+    "@webpulse/shared": "workspace:*"
   }
 }

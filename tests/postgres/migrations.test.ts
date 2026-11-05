@@ -42,7 +42,7 @@ describe('real PostgreSQL migration and readiness', () => {
         migrate(migrationConnection(first), migrations),
         migrate(migrationConnection(second), migrations),
       ]);
-      expect(results.map((result) => result.length).sort()).toEqual([0, 1]);
+      expect(results.map((result) => result.length).sort()).toEqual([0, migrations.length]);
       await expect(checkDatabaseReady(pool, migrations)).resolves.toBeUndefined();
     } finally {
       first.release();
@@ -62,7 +62,7 @@ describe('real PostgreSQL migration and readiness', () => {
       checkDatabaseReady(pool, [
         ...migrations,
         {
-          name: '002_pending.sql',
+          name: '003_pending.sql',
           checksum: 'b'.repeat(64),
           sql: '',
         },
@@ -70,7 +70,11 @@ describe('real PostgreSQL migration and readiness', () => {
     ).rejects.toThrow('pending');
     await pool.query("UPDATE schema_migrations SET checksum = repeat('0',64)");
     await expect(checkDatabaseReady(pool, migrations)).rejects.toThrow('history');
-    await pool.query('UPDATE schema_migrations SET checksum = $1', [migrations[0]!.checksum]);
+    for (const migration of migrations)
+      await pool.query('UPDATE schema_migrations SET checksum = $1 WHERE name=$2', [
+        migration.checksum,
+        migration.name,
+      ]);
     await expect(checkDatabaseReady(pool, [])).rejects.toThrow('history');
     await expect(checkDatabaseReady(pool, migrations)).resolves.toBeUndefined();
   });
@@ -82,7 +86,7 @@ describe('real PostgreSQL migration and readiness', () => {
         migrate(migrationConnection(client), [
           ...migrations,
           {
-            name: '002_fail.sql',
+            name: '003_fail.sql',
             checksum: 'c'.repeat(64),
             sql: 'CREATE TABLE partial_work(id integer); SELECT missing_column;',
           },
@@ -94,7 +98,9 @@ describe('real PostgreSQL migration and readiness', () => {
     }
     const retry = await pool.connect();
     try {
-      expect(await migrate(migrationConnection(retry), migrations)).toEqual(['001_init.sql']);
+      expect(await migrate(migrationConnection(retry), migrations)).toEqual(
+        migrations.map((item) => item.name),
+      );
     } finally {
       retry.release();
     }

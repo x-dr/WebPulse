@@ -9,7 +9,7 @@
     "pnpm": ">=10.20.0 <11"
   },
   "scripts": {
-    "dev": "pnpm --filter @webpulse/shared build && pnpm --parallel --filter @webpulse/server --filter @webpulse/dashboard dev",
+    "dev": "pnpm --filter @webpulse/shared build && pnpm --filter @webpulse/tracker build && pnpm --parallel --filter @webpulse/server --filter @webpulse/dashboard dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm --filter @webpulse/shared build && pnpm -r typecheck && tsc -p tsconfig.tools.json",
     "lint": "oxlint --deny-warnings .",
@@ -18,7 +18,9 @@
     "test:integration": "pnpm --filter @webpulse/shared build && vitest run --project integration",
     "test:e2e": "playwright test",
     "db:migrate": "pnpm --filter @webpulse/server db:migrate",
-    "test:postgres": "pnpm --filter @webpulse/shared build && vitest run --project postgres"
+    "test:postgres": "pnpm --filter @webpulse/shared build && pnpm --filter @webpulse/tracker build && vitest run --project postgres",
+    "admin:create": "pnpm --filter @webpulse/server admin:create",
+    "test:sdk": "pnpm --filter @webpulse/shared build && pnpm --filter @webpulse/tracker build && playwright test -c playwright.sdk.config.ts"
   },
   "devDependencies": {
     "typescript": "7.0.2",

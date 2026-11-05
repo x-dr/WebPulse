@@ -12,7 +12,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "db:migrate": "node --import tsx src/cli.ts database:migrate"
+    "db:migrate": "node --import tsx src/cli.ts database:migrate",
+    "admin:create": "node --import tsx src/cli.ts admin:create"
   },
   "dependencies": {
     "@webpulse/shared": "workspace:*",

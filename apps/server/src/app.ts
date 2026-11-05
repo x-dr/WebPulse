@@ -1,11 +1,24 @@
 import Fastify, { LogController } from 'fastify';
+import { readFile } from 'node:fs/promises';
+import type pg from 'pg';
+import type { SecurityConfig } from './config/security.js';
+import { ApiError } from './http/errors.js';
+import { registerRequestBudget } from './http/budget.js';
+import { registerAuth } from './modules/auth/routes.js';
+import { registerSites } from './modules/sites/routes.js';
+import { registerCollection } from './modules/collection/routes.js';
 import { registerHealthRoutes } from './modules/maintenance/health.js';
 
-export function buildApp(options: { ready: () => Promise<void>; logLevel?: string }) {
+export function buildApp(options: {
+  ready: () => Promise<void>;
+  logLevel?: string;
+  pool?: pg.Pool;
+  security?: SecurityConfig;
+}) {
   const app = Fastify({
     bodyLimit: 16 * 1024,
     trustProxy: false,
-    requestTimeout: 10_000,
+    requestTimeout: 5_000,
     logController: new LogController({ disableRequestLogging: true }),
     ajv: { customOptions: { removeAdditional: false, coerceTypes: false, allErrors: false } },
     logger: options.logLevel
@@ -18,23 +31,46 @@ export function buildApp(options: { ready: () => Promise<void>; logLevel?: strin
         }
       : false,
   });
+  registerRequestBudget(app);
   app.setNotFoundHandler((_request, reply) => {
     reply.code(404).send({ error: { code: 'NOT_FOUND', message: '接口不存在' } });
   });
   app.setErrorHandler((error, _request, reply) => {
-    const code =
+    const statusCode =
       typeof error === 'object' && error !== null && 'statusCode' in error
         ? error.statusCode
         : undefined;
     const status =
-      typeof code === 'number' && Number.isInteger(code) && code >= 400 && code < 500 ? code : 500;
+      typeof statusCode === 'number' && statusCode >= 400 && statusCode < 600 ? statusCode : 500;
+    if (status === 429 || status === 503) reply.header('retry-after', '1');
     reply.code(status).send({
       error: {
-        code: status === 500 ? 'INTERNAL_ERROR' : 'INVALID_REQUEST',
-        message: status === 500 ? '服务暂时不可用' : '请求无效',
+        code:
+          error instanceof ApiError
+            ? error.code
+            : status === 413
+              ? 'payload_too_large'
+              : status < 500
+                ? 'invalid_schema'
+                : 'INTERNAL_ERROR',
+        message: status >= 500 ? '服务暂时不可用' : '请求无效',
       },
     });
   });
+  if (options.pool && options.security) {
+    const auth = registerAuth(app, options.pool, options.security);
+    registerSites(app, auth, options.security.adminOrigin);
+    registerCollection(app, options.pool, options.security);
+    app.get('/tracker.js', async (_request, reply) => {
+      reply
+        .type('application/javascript; charset=utf-8')
+        .header('cache-control', 'public, max-age=300');
+      return readFile(
+        new URL('../../../packages/tracker/dist/tracker.js', import.meta.url),
+        'utf8',
+      );
+    });
+  }
   registerHealthRoutes(app, options.ready);
   return app;
 }

@@ -87,6 +87,10 @@ importers:
         version: 0.34.52
 
   packages/tracker:
+    dependencies:
+      '@webpulse/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       esbuild:
         specifier: 0.25.12

@@ -5,3 +5,5 @@ export {
   SESSION_MAX_DURATION_MS,
   closedSessionMetrics,
 } from './metrics.js';
+export * from './collection.js';
+export * from './privacy.js';

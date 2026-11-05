@@ -25,13 +25,13 @@ afterEach(async () => {
 });
 
 describe('migration lifecycle on PGlite (not real PostgreSQL concurrency)', () => {
-  it('creates all 16 reference tables plus migration history and can be rerun', async () => {
-    expect(await migrate(connection, migrations)).toEqual(['001_init.sql']);
+  it('creates reference tables, rule snapshots and migration history and can be rerun', async () => {
+    expect(await migrate(connection, migrations)).toEqual(migrations.map((item) => item.name));
     expect(await migrate(connection, migrations)).toEqual([]);
     const result = await database.query<{ count: number }>(
       "SELECT count(*)::integer AS count FROM pg_tables WHERE schemaname = 'public'",
     );
-    expect(result.rows[0]?.count).toBe(17);
+    expect(result.rows[0]?.count).toBe(18);
   });
 
   it('rejects changed SQL and unknown or missing migration history', async () => {
@@ -48,7 +48,7 @@ describe('migration lifecycle on PGlite (not real PostgreSQL concurrency)', () =
       migrate(connection, [
         ...migrations,
         {
-          name: '002_failure.sql',
+          name: '003_failure.sql',
           checksum: 'a'.repeat(64),
           sql: 'CREATE TABLE partial_work(id integer); SELECT missing_column;',
         },
@@ -58,7 +58,7 @@ describe('migration lifecycle on PGlite (not real PostgreSQL concurrency)', () =
       "SELECT to_regclass('public.admins')::text AS table_name UNION ALL SELECT to_regclass('public.partial_work')::text UNION ALL SELECT to_regclass('public.schema_migrations')::text",
     );
     expect(result.rows.every((row) => row.table_name === null)).toBe(true);
-    expect(await migrate(connection, migrations)).toEqual(['001_init.sql']);
+    expect(await migrate(connection, migrations)).toEqual(migrations.map((item) => item.name));
   });
 
   it('enforces reference constraints and preserves data across reruns', async () => {

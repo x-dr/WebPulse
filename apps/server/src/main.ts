@@ -1,3 +1,5 @@
+import { readSecurityConfig } from './config/security.js';
+import { sessionCloser } from './modules/sessions/worker.js';
 import { buildApp } from './app.js';
 import { loadWorkspaceEnv, readConfig } from './config/env.js';
 import { checkDatabaseReady, createPool } from './db/database.js';
@@ -11,8 +13,14 @@ async function main(): Promise<void> {
   const app = buildApp({
     ready: () => checkDatabaseReady(pool, migrations),
     logLevel: config.logLevel,
+    pool,
+    security: readSecurityConfig(),
   });
-  app.addHook('onClose', () => pool.end());
+  const stopCloser = sessionCloser(pool).start();
+  app.addHook('onClose', async () => {
+    await stopCloser();
+    await pool.end();
+  });
   let closing = false;
   const shutdown = async () => {
     if (closing) return;

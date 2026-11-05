@@ -1,0 +1,78 @@
+{
+  "date": "2026-11-05",
+  "milestone": "M1",
+  "status": "complete",
+  "scope": "Local implementation and isolated development acceptance; no deployment",
+  "environment": {
+    "node": "24.18.0",
+    "pnpm": "10.20.0",
+    "postgres": "17.11",
+    "browser": "Google Chrome 151.0.7922.71",
+    "browser_executable": "/opt/google/chrome/chrome"
+  },
+  "checks": {
+    "frozen_offline_install": "passed",
+    "typecheck": "passed",
+    "oxlint": "passed",
+    "format_check": "passed",
+    "build": "passed",
+    "diff_check": "passed",
+    "immutable_001_and_reference": "unchanged"
+  },
+  "tests": {
+    "unit": 38,
+    "integration": 9,
+    "postgres": 41,
+    "sdk_browser": 19,
+    "existing_dashboard_browser": 4,
+    "total": 111,
+    "failed": 0
+  },
+  "tracker": {
+    "bytes": 10365,
+    "gzip_bytes": 4291,
+    "gzip_limit_bytes": 8192,
+    "sha256": "2ac216da59aad27977d7cc855f93e6c045d8096d33fdaad15ebf67ffa8b315f8",
+    "gzip_implementation": "node:zlib gzipSync default options"
+  },
+  "migration": {
+    "new": "002_collection.sql",
+    "default_development_schema_applied": false,
+    "isolated_schema_migration_and_rerun": "passed"
+  },
+  "evidence": {
+    "postgres_cases": [
+      {
+        "file": "tests/postgres/auth-sites.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "tests/postgres/collection-concurrency.test.ts",
+        "passed": 10
+      },
+      {
+        "file": "tests/postgres/collection.test.ts",
+        "passed": 18
+      },
+      {
+        "file": "tests/postgres/migrations.test.ts",
+        "passed": 3
+      },
+      {
+        "file": "tests/postgres/site-locks.test.ts",
+        "passed": 4
+      }
+    ],
+    "index_fixture_rows_per_business_table": 10000,
+    "fairness_sites": 5,
+    "real_browser_http_postgres_chain": true,
+    "sql_query_values_or_secrets_logged": false
+  },
+  "limitations": [
+    "No production deployment, public TLS domain, or real user consent manager acceptance",
+    "No default-schema migration, actual administrator creation, existing secret changes, commit or push",
+    "Query/aggregation/deletion/retention execution remain M2; dashboard business UI remains M3; trusted proxy and production packaging remain M4",
+    "Complete retention-window load, write amplification, recovery and long-duration actual-midnight observation remain later acceptance",
+    "SDK BFCache combination is simulated via browser lifecycle events; Firefox and WebKit not tested"
+  ]
+}
