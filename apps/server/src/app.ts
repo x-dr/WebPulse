@@ -3,7 +3,9 @@ import { readFile } from 'node:fs/promises';
 import type pg from 'pg';
 import type { SecurityConfig } from './config/security.js';
 import { ApiError } from './http/errors.js';
-import { registerRequestBudget } from './http/budget.js';
+import { registerRequestBudget, requestBudget } from './http/budget.js';
+import { transaction } from './db/transaction.js';
+import { checkRecoveryGate } from './db/recovery-gate.js';
 import { registerAuth } from './modules/auth/routes.js';
 import { registerSites } from './modules/sites/routes.js';
 import { registerCollection } from './modules/collection/routes.js';
@@ -11,19 +13,22 @@ import { registerHealthRoutes } from './modules/maintenance/health.js';
 import { registerReports } from './modules/reports/routes.js';
 import { registerRetention } from './modules/retention/routes.js';
 import { registerDeletion } from './modules/deletion/routes.js';
-import type { DeletionKey } from './modules/deletion/encryption.js';
+import type { DeletionEncryptor } from './modules/deletion/encryption.js';
 import { registerDiagnostics } from './modules/maintenance/diagnostics.js';
+import { registerRealtime } from './modules/realtime/routes.js';
 
 export function buildApp(options: {
   ready: () => Promise<void>;
   logLevel?: string;
   pool?: pg.Pool;
   security?: SecurityConfig;
-  deletionKey?: DeletionKey;
+  deletionKey?: DeletionEncryptor;
+  trustedProxy?: string[];
+  sseMax?: number;
 }) {
   const app = Fastify({
     bodyLimit: 16 * 1024,
-    trustProxy: false,
+    trustProxy: options.trustedProxy?.length ? options.trustedProxy : false,
     requestTimeout: 5_000,
     logController: new LogController({ disableRequestLogging: true }),
     ajv: { customOptions: { removeAdditional: false, coerceTypes: false, allErrors: false } },
@@ -64,6 +69,11 @@ export function buildApp(options: {
     });
   });
   if (options.pool && options.security) {
+    const pool = options.pool;
+    app.addHook('onRequest', async (request) => {
+      if (!request.url.startsWith('/api/v1/health/'))
+        await transaction(pool, requestBudget(request), (c) => checkRecoveryGate(c));
+    });
     const auth = registerAuth(app, options.pool, options.security);
     registerSites(app, auth, options.security.adminOrigin);
     registerCollection(app, options.pool, options.security);
@@ -71,12 +81,14 @@ export function buildApp(options: {
     registerRetention(app, auth);
     registerDeletion(app, auth, options.deletionKey);
     registerDiagnostics(app, auth);
+    registerRealtime(app, options.pool, auth, options.sseMax);
     app.get('/tracker.js', async (_request, reply) => {
       reply
         .type('application/javascript; charset=utf-8')
         .header('cache-control', 'public, max-age=300');
       return readFile(
-        new URL('../../../packages/tracker/dist/tracker.js', import.meta.url),
+        process.env.TRACKER_FILE ??
+          new URL('../../../packages/tracker/dist/tracker.js', import.meta.url),
         'utf8',
       );
     });

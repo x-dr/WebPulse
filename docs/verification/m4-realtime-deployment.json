@@ -1,0 +1,74 @@
+{
+  "milestone": "M4 实时与部署",
+  "verified_on": "2026-11-06",
+  "status": "passed",
+  "scope": "local_repository_isolated_postgresql_and_real_production_containers",
+  "baseline_commit": "29756dda076516dc6290f36180286a4627cdf42b",
+  "preserved_uncommitted_m3_work": true,
+  "checks": {
+    "typecheck": "passed",
+    "oxlint": "passed",
+    "prettier": "passed",
+    "git_diff_check": "passed",
+    "workspace_build": "passed",
+    "production_image_frozen_lockfile_install": "passed",
+    "offline_lockfile_only_validation": "passed",
+    "local_full_offline_install": "not_completed_non_tty_safeguard_existing_dependencies_preserved",
+    "antd_cli_lint": { "issues": 0, "partial": false },
+    "key_recovery_and_no_overwrite_probe": "passed",
+    "main_and_standalone_journal_compose_config": "passed",
+    "documentation_links_and_json": "passed",
+    "isolated_container_and_volume_cleanup": "passed"
+  },
+  "tests": {
+    "unit": { "passed": 52 },
+    "pglite": { "passed": 10 },
+    "postgresql": { "passed": 75 },
+    "sdk_browser": { "passed": 19 },
+    "dashboard_browser": { "passed": 19, "skipped": 1 },
+    "total_passed": 175
+  },
+  "realtime_acceptance": [
+    "one current page per visitor; durable PV and heartbeat reads; no identifiers",
+    "authenticated SSE; extra date parameters rejected; Last-Event-ID yields full reset",
+    "20 global and 3 per-admin streams; no held database connection per stream",
+    "64 KiB output cap; no further enqueues under pressure; 5-second cleanup",
+    "logout, site invalidation and graceful shutdown release connections",
+    "hidden pause/resume, site lifecycle, tab sharing and 503 handshake retry",
+    "1440, 1024, 768 and 390 pixel screenshots; chart data-table alternative"
+  ],
+  "privacy_recovery_acceptance": [
+    "encryption-only RSA public key in HTTP; private key in maintenance process",
+    "explicit journal initialization, authenticated chain, idempotent acknowledgement and completion records",
+    "upload-before-local-ack crash retains intent and does not delete facts",
+    "complete-log replay includes accepted incomplete intents",
+    "missing sequence, decryption key or identity epoch keeps gate locked",
+    "persistent privacy_replay_unverifiable coverage survives repeat replay",
+    "post-restore maintenance reuses original completion sequences and preserves privacy gaps",
+    "actual encrypted pg_dump and pg_restore plus production API against restored database"
+  ],
+  "images": {
+    "platform_verified": "linux/amd64",
+    "api": "sha256:f79027ece3a8ad837e6073934220e4576c895137e18174960c2c910ffad6f49d",
+    "web": "sha256:819d813dd30bec9184c043f4d68f36031c07225fe84f2ecb1a77bf04bfe45955",
+    "node_base": "node:24.18.0-bookworm-slim@sha256:6f7b03f7c2c8e2e784dcf9295400527b9b1270fd37b7e9a7285cf83b6951452d",
+    "nginx_base": "nginx:1.30.6-alpine@sha256:0e52bd054126cdc040b1276c0af347aeb02a41b9cfe305d6094767ac30e97949",
+    "postgres_base": "postgres:17-bookworm@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5"
+  },
+  "artifacts": {
+    "container_drill": "m4-deployment.json",
+    "screenshots": [
+      "m4-realtime-1440.png",
+      "m4-realtime-1024.png",
+      "m4-realtime-768.png",
+      "m4-realtime-390.png"
+    ]
+  },
+  "boundaries": [
+    "No commit, push, VPS deployment or changes to existing user data",
+    "Self-signed local test TLS; no public CA certificate issuance or off-host copy",
+    "Separate journal directory on the same test host; no off-host durability proof",
+    "No real seven-day rotation, production RPO/RTO, full retention-window load or M5 crash matrix",
+    "The bounded atomic journal currently refuses writes above 4 MiB rather than dropping history"
+  ]
+}

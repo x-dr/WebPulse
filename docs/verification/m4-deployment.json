@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-06",
+  "scope": "isolated local production containers; self-signed test TLS; separate local journal storage",
+  "passed": true,
+  "checks": [
+    "fresh and repeat database:prepare",
+    "non-root production API and TLS Nginx startup",
+    "TLS login, Secure cookie, static SPA/SDK, forwarded-header overwrite",
+    "unbuffered SSE through TLS proxy",
+    "runtime role cannot DDL, alter migration history or create admins; no decrypt key",
+    "encrypted pg_dump + matching key backup + inventory",
+    "real HTTPS journal acknowledgements and completion records; site and visitor deletion",
+    "database/API/web restart preserves acknowledged facts and deletion state",
+    "actual pg_restore of pre-deletion snapshot, replay of every intent, privacy gaps, production API boots against restored DB",
+    "post-restore maintenance reuses immutable completion sequences and retains privacy gaps"
+  ],
+  "restore_seconds": 12.551,
+  "total_seconds": 47.503,
+  "limits": [
+    "No VPS deployment, trusted public certificate, off-host copy or multi-day retention proof",
+    "RPO/RTO observed only for this small synthetic fixture; full workload in M5"
+  ]
+}

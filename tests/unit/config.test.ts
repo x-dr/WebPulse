@@ -8,6 +8,18 @@ const temporary: string[] = [];
 afterEach(() => temporary.splice(0).forEach((path) => rmSync(path, { recursive: true })));
 
 describe('environment validation', () => {
+  it('accepts explicit proxy addresses and rejects broad/invalid trust and oversized SSE limits', () => {
+    expect(
+      readConfig({ DB_PASSWORD: 'test-only', TRUSTED_PROXY_CIDRS: '172.30.88.10/32' }).trustedProxy,
+    ).toEqual(['172.30.88.10/32']);
+    for (const proxy of ['true', '0.0.0.0/0', '::/0', '127.0.0.1/33', ''])
+      expect(() => readConfig({ DB_PASSWORD: 'test-only', TRUSTED_PROXY_CIDRS: proxy })).toThrow(
+        'TRUSTED_PROXY',
+      );
+    expect(() => readConfig({ DB_PASSWORD: 'test-only', SSE_MAX_CONNECTIONS: '21' })).toThrow(
+      'SSE_MAX',
+    );
+  });
   it('fails closed without a database password', () => {
     expect(() => readConfig({})).toThrow('DB_PASSWORD');
   });

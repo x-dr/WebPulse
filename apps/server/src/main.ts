@@ -1,6 +1,7 @@
 import { readSecurityConfig } from './config/security.js';
 import { maintenanceWorker } from './modules/maintenance/worker.js';
-import { readDeletionKey } from './modules/deletion/encryption.js';
+import { readDeletionEncryptor, readDeletionKey } from './modules/deletion/encryption.js';
+import { readJournalClient } from './modules/deletion/journal-client.js';
 import { buildApp } from './app.js';
 import { loadWorkspaceEnv, readConfig } from './config/env.js';
 import { checkDatabaseReady, createPool } from './db/database.js';
@@ -12,9 +13,10 @@ async function main(): Promise<void> {
   const migrations = await loadMigrations();
   const pool = createPool(config.database);
   const security = readSecurityConfig();
-  const deletionKey = readDeletionKey();
+  const deletionKey = readDeletionEncryptor();
   if (
     deletionKey &&
+    'key' in deletionKey &&
     [security.visitorKey, security.ipKey, security.csrfKey].some((key) =>
       key.equals(deletionKey.key),
     )
@@ -25,9 +27,15 @@ async function main(): Promise<void> {
     logLevel: config.logLevel,
     pool,
     security,
+    trustedProxy: config.trustedProxy,
+    sseMax: config.sseMax,
     ...(deletionKey ? { deletionKey } : {}),
   });
-  const stopCloser = maintenanceWorker(pool, deletionKey).start();
+  if (process.env.NODE_ENV === 'production' && config.jobsEnabled)
+    throw new Error('Production maintenance must run separately');
+  const stopCloser = config.jobsEnabled
+    ? maintenanceWorker(pool, readDeletionKey(), readJournalClient()).start()
+    : async () => {};
   app.addHook('onClose', async () => {
     await stopCloser();
     await pool.end();

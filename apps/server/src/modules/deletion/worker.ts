@@ -15,13 +15,19 @@ export type DeletionJournal = {
     envelope: Envelope;
     schemaVersion: 1;
   }): Promise<{ sequence: string }>;
+  complete?(taskId: string, result: unknown): Promise<{ sequence: string }>;
 };
 const workerId = randomUUID();
 export async function runDeletionBatch(
   client: pg.PoolClient,
   key?: DeletionKey,
   journal?: DeletionJournal,
-  options: { limit?: number; owner?: string; beforeCommit?: () => Promise<void> } = {},
+  options: {
+    limit?: number;
+    owner?: string;
+    beforeCommit?: () => Promise<void>;
+    privacyReplay?: boolean;
+  } = {},
 ) {
   const owner = options.owner ?? workerId;
   const job = await maintenanceTransaction(client, async () => {
@@ -89,6 +95,13 @@ export async function runDeletionBatch(
     }
     if (!job.journal_ack_at) throw new Error('journal_unavailable');
     if (job.phase === 'aggregates') {
+      if (options.privacyReplay) {
+        await maintenanceTransaction(client, async () => {
+          await fenced();
+          await client.query("UPDATE deletion_jobs SET phase='verify' WHERE id=$1", [job.id]);
+        });
+        return true;
+      }
       const bucket = (
         await client.query(
           'SELECT * FROM deletion_rebuild_buckets WHERE task_id=$1 AND NOT done ORDER BY grain,bucket_start LIMIT 1',
@@ -155,8 +168,8 @@ export async function runDeletionBatch(
         const keys = selector.visitor_keys.map((k) => Buffer.from(k.key, 'hex'));
         const counts = (
           await client.query(
-            `SELECT (SELECT count(*) FROM events WHERE site_id=$1 AND visitor_key=ANY($2::bytea[]))+(SELECT count(*) FROM sessions WHERE site_id=$1 AND visitor_key=ANY($2::bytea[]))+(SELECT count(*) FROM visitor_days WHERE site_id=$1 AND visitor_key=ANY($2::bytea[])) AS count`,
-            [site.id, keys],
+            `SELECT (SELECT count(*) FROM events WHERE site_id=$1 AND visitor_key=ANY($2::bytea[]) AND occurred_at<=$3)+(SELECT count(*) FROM sessions WHERE site_id=$1 AND visitor_key=ANY($2::bytea[]) AND started_at<=$3)+(SELECT count(*) FROM visitor_days WHERE site_id=$1 AND visitor_key=ANY($2::bytea[]) AND local_date<=($3 AT TIME ZONE $4)::date) AS count`,
+            [site.id, keys, job.cutoff_at, site.timezone],
           )
         ).rows[0];
         if (Number(counts.count)) throw new Error('verification_failed');
@@ -170,7 +183,7 @@ export async function runDeletionBatch(
             [site.id, job.id, site.timezone],
           )
         ).rowCount;
-        if (mismatch) throw new Error('verification_failed');
+        if (mismatch && !options.privacyReplay) throw new Error('verification_failed');
         await client.query(
           "UPDATE coverage_gaps SET resolved_at=clock_timestamp(),revision=revision+1 WHERE job_id=$1 AND reason='deletion_rebuild'",
           [job.id],

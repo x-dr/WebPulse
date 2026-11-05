@@ -8,3 +8,4 @@ export {
 export * from './collection.js';
 export * from './privacy.js';
 export * from './reporting.js';
+export type { RealtimeSnapshot } from './realtime.js';

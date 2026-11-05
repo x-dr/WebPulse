@@ -17,6 +17,7 @@ export function registerAuth(app: FastifyInstance, pool: pg.Pool, security: Secu
   const gate = new FairGate(2, 2, 16, 16);
   const limits = new RateLimits();
   let hashing = false;
+  const logoutListeners = new Set<(token: string) => void>();
   function origin(request: FastifyRequest) {
     if (request.headers.origin !== security.adminOrigin) throw new ApiError(403, 'origin_denied');
   }
@@ -139,12 +140,30 @@ export function registerAuth(app: FastifyInstance, pool: pg.Pool, security: Secu
         digest(tokenFrom(request)),
       ]);
     });
+    for (const listener of logoutListeners) listener(digest(tokenFrom(request)).toString('hex'));
     reply
       .header('set-cookie', cookie('', 0))
       .header('cache-control', 'private, no-store')
       .code(204)
       .send();
   });
-  return { authenticate, managed };
+  return {
+    authenticate,
+    managed,
+    async streamIdentity(client: pg.PoolClient, request: FastifyRequest) {
+      const hash = digest(tokenFrom(request));
+      const row = (
+        await client.query('SELECT admin_id FROM admin_sessions WHERE token_hash=$1', [hash])
+      ).rows[0];
+      if (!row) throw new ApiError(401, 'auth_required');
+      return { admin: String(row.admin_id), token: hash.toString('hex') };
+    },
+    onLogout(listener: (token: string) => void) {
+      logoutListeners.add(listener);
+      return () => {
+        logoutListeners.delete(listener);
+      };
+    },
+  };
 }
 export type AuthService = ReturnType<typeof registerAuth>;

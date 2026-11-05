@@ -61,10 +61,12 @@ export async function deleteFactBatch(
       ? "visitor_key>decode($3,'hex')"
       : `($3='' OR ${column}>nullif($3,'')::uuid)`;
   const last = String(job.cursor.last_key ?? '');
+  const time =
+    actual === 'events' ? 'occurred_at' : actual === 'sessions' ? 'started_at' : 'last_activity_at';
   const rows = (
     await client.query(
-      `SELECT *,${primary}::text AS primary_key FROM ${actual} WHERE site_id=$1 AND (${filter}) AND ($2::bytea[] IS NOT NULL) ${eventFilter} AND ${lowerBound} AND ($4::timestamptz IS NOT NULL) ORDER BY ${column} LIMIT $5`,
-      [site.id, keys, last, job.cutoff_at, limit],
+      `SELECT *,${primary}::text AS primary_key FROM ${actual} WHERE site_id=$1 AND (${filter}) AND ($2::bytea[] IS NOT NULL) ${eventFilter} AND ${lowerBound} AND ($4::timestamptz IS NOT NULL) AND ($6::boolean OR ${time}<=$4) ORDER BY ${column} LIMIT $5`,
+      [site.id, keys, last, job.cutoff_at, limit, job.kind === 'site'],
     )
   ).rows;
   await rememberBuckets(
@@ -114,7 +116,7 @@ export async function deleteFactBatch(
 export async function deleteDerivedBatch(
   client: pg.PoolClient,
   job: Job,
-  site: { id: string },
+  site: { id: string; timezone: string },
   selector: Selector,
   limit: number,
 ) {
@@ -147,6 +149,12 @@ export async function deleteDerivedBatch(
       : table === 'visitor_days'
         ? 'visitor_key=ANY($2::bytea[])'
         : 'kind=1 AND member_key=ANY($2::bytea[])';
+  const cutoff =
+    job.kind === 'site'
+      ? 'true'
+      : table === 'visitor_days'
+        ? 'local_date<=($4::timestamptz AT TIME ZONE $5)::date'
+        : "bucket_start<=date_trunc('hour',$4::timestamptz)";
   const order =
     table === 'distinct_hours'
       ? 'bucket_start,kind,member_key'
@@ -164,8 +172,8 @@ export async function deleteDerivedBatch(
                   ? 'local_date,ip_key'
                   : 'local_date';
   const removed = await client.query(
-    `WITH doomed AS (SELECT ctid FROM ${table} WHERE site_id=$1 AND (${filter}) AND ($2::bytea[] IS NOT NULL) ORDER BY ${order} LIMIT $3) DELETE FROM ${table} WHERE ctid IN (SELECT ctid FROM doomed)`,
-    [site.id, keys, limit],
+    `WITH doomed AS (SELECT ctid FROM ${table} WHERE site_id=$1 AND (${filter}) AND (${cutoff}) AND ($2::bytea[] IS NOT NULL) AND ($4::timestamptz IS NOT NULL) AND ($5::text IS NOT NULL) ORDER BY ${order} LIMIT $3) DELETE FROM ${table} WHERE ctid IN (SELECT ctid FROM doomed)`,
+    [site.id, keys, limit, job.cutoff_at, site.timezone],
   );
   return {
     phase: 'members',

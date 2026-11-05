@@ -1,0 +1,16 @@
+.git
+.agents
+.aws
+.codex
+.env
+.env.*
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+secrets
+tls
+backups
+journal-data
+test-results
+playwright-report
+docs/verification/*.png

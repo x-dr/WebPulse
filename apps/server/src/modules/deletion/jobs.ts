@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type pg from 'pg';
 import { ApiError } from '../../http/errors.js';
 import { lockSite } from '../sites/store.js';
-import { encryptSelector, type DeletionKey, type Selector } from './encryption.js';
+import { encryptSelector, type DeletionEncryptor, type Selector } from './encryption.js';
 
 export type DeletionRequest = {
   site: string;
@@ -14,7 +14,7 @@ export type DeletionRequest = {
 export async function requestDeletion(
   client: pg.PoolClient,
   input: DeletionRequest,
-  key: DeletionKey | undefined,
+  key: DeletionEncryptor | undefined,
 ) {
   const hash = createHash('sha256')
     .update(

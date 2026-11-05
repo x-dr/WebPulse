@@ -1,0 +1,216 @@
+name: webpulse
+x-log: &logs
+  driver: json-file
+  options: { max-size: 10m, max-file: '3' }
+x-runtime: &runtime
+  image: ${WEBPULSE_API_IMAGE:-webpulse-api:0.1.0-m4}
+  init: true
+  read_only: true
+  tmpfs: ['/tmp:size=16m,mode=1777']
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  stop_grace_period: 30s
+  networks: [private]
+  logging: *logs
+x-db: &db
+  NODE_ENV: production
+  DB_HOST: db
+  DB_PORT: '5432'
+  DB_NAME: ${DB_NAME:-webpulse}
+  NODE_OPTIONS: --max-old-space-size=128
+x-worker-env: &worker-env
+  <<: *db
+  DB_USER: webpulse_worker
+  DB_PASSWORD_FILE: /run/secrets/db_worker_password
+  DB_POOL_MAX: '1'
+  DELETION_PRIVATE_KEY_FILE: /run/secrets/deletion_private_key
+  DELETION_KEY_ID: v1
+  DELETION_JOURNAL_URL: ${DELETION_JOURNAL_URL:?set DELETION_JOURNAL_URL}
+  JOURNAL_TOKEN_FILE: /run/secrets/journal_token
+  NODE_EXTRA_CA_CERTS: /run/secrets/journal_ca
+services:
+  db:
+    image: postgres:17-bookworm@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-webpulse}
+      POSTGRES_USER: webpulse_owner
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_owner_password
+    secrets: [db_owner_password]
+    volumes: [pg_data:/var/lib/postgresql/data]
+    command:
+      [
+        postgres,
+        -c,
+        shared_buffers=64MB,
+        -c,
+        work_mem=2MB,
+        -c,
+        maintenance_work_mem=32MB,
+        -c,
+        autovacuum_work_mem=16MB,
+        -c,
+        autovacuum_max_workers=1,
+        -c,
+        max_connections=20,
+        -c,
+        max_parallel_workers_per_gather=0,
+        -c,
+        max_wal_size=512MB,
+        -c,
+        timezone=UTC,
+        -c,
+        log_statement=none,
+        -c,
+        log_min_error_statement=panic,
+        -c,
+        log_parameter_max_length_on_error=0,
+      ]
+    mem_limit: 384m
+    shm_size: 128mb
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U webpulse_owner -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      private: { ipv4_address: '${DB_PRIVATE_IP:-172.30.88.30}' }
+    logging: *logs
+  api:
+    <<: *runtime
+    build: { context: ., dockerfile: docker/Dockerfile, target: api }
+    restart: unless-stopped
+    environment:
+      <<: *db
+      HOST: 0.0.0.0
+      PORT: '3000'
+      DB_USER: webpulse_app
+      DB_PASSWORD_FILE: /run/secrets/db_app_password
+      DB_POOL_MAX: '7'
+      ADMIN_ORIGIN: ${ADMIN_ORIGIN:?set ADMIN_ORIGIN}
+      TRUSTED_PROXY_CIDRS: ${WEB_PRIVATE_IP:-172.30.88.10}/32
+      SSE_MAX_CONNECTIONS: '20'
+      JOBS_ENABLED: 'false'
+      VISITOR_HMAC_KEY_FILE: /run/secrets/visitor_hmac_key
+      IP_HMAC_KEY_FILE: /run/secrets/ip_hmac_key
+      CSRF_HMAC_KEY_FILE: /run/secrets/csrf_hmac_key
+      DELETION_PUBLIC_KEY_FILE: /run/secrets/deletion_public_key
+      DELETION_KEY_ID: v1
+    secrets: [db_app_password, visitor_hmac_key, ip_hmac_key, csrf_hmac_key, deletion_public_key]
+    depends_on: { db: { condition: service_healthy } }
+    mem_limit: 256m
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          'fetch("http://127.0.0.1:3000/api/v1/health/ready").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    networks:
+      private: { ipv4_address: '${API_PRIVATE_IP:-172.30.88.20}' }
+  worker:
+    <<: *runtime
+    restart: unless-stopped
+    command: [node, dist/cli.js, 'worker:start']
+    environment: *worker-env
+    secrets: [db_worker_password, deletion_private_key, journal_token, journal_ca]
+    depends_on: { db: { condition: service_healthy } }
+    mem_limit: 192m
+  ops:
+    <<: *runtime
+    profiles: [ops]
+    command: [node, dist/cli.js, 'database:prepare']
+    environment:
+      <<: *worker-env
+      DB_USER: webpulse_owner
+      DB_PASSWORD_FILE: /run/secrets/db_owner_password
+      DB_APP_PASSWORD_FILE: /run/secrets/db_app_password
+      DB_WORKER_PASSWORD_FILE: /run/secrets/db_worker_password
+      JOURNAL_SIGNING_KEY_FILE: /run/secrets/journal_signing_key
+      ADMIN_ORIGIN: ${ADMIN_ORIGIN:?set ADMIN_ORIGIN}
+      VISITOR_HMAC_KEY_FILE: /run/secrets/visitor_hmac_key
+      IP_HMAC_KEY_FILE: /run/secrets/ip_hmac_key
+      CSRF_HMAC_KEY_FILE: /run/secrets/csrf_hmac_key
+    secrets:
+      [
+        db_owner_password,
+        db_app_password,
+        db_worker_password,
+        deletion_private_key,
+        journal_token,
+        journal_signing_key,
+        journal_ca,
+        visitor_hmac_key,
+        ip_hmac_key,
+        csrf_hmac_key,
+      ]
+    depends_on: { db: { condition: service_healthy } }
+    mem_limit: 192m
+  web:
+    image: ${WEBPULSE_WEB_IMAGE:-webpulse-web:0.1.0-m4}
+    build: { context: ., dockerfile: docker/Dockerfile, target: web }
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment: { WEBPULSE_DOMAIN: '${WEBPULSE_DOMAIN:?set WEBPULSE_DOMAIN}' }
+    ports:
+      [
+        '${WEB_BIND_IP:-0.0.0.0}:${HTTP_PORT:-80}:8080',
+        '${WEB_BIND_IP:-0.0.0.0}:${HTTPS_PORT:-443}:8443',
+      ]
+    volumes: ['${TLS_DIR:-./tls}:/etc/nginx/tls:ro']
+    tmpfs: ['/tmp:size=8m,mode=1777']
+    depends_on: { api: { condition: service_healthy } }
+    mem_limit: 48m
+    stop_grace_period: 30s
+    healthcheck:
+      test:
+        [
+          CMD-SHELL,
+          'wget --no-check-certificate -q -O /dev/null --header="Host: $${WEBPULSE_DOMAIN}" https://127.0.0.1:8443/',
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      private: { ipv4_address: '${WEB_PRIVATE_IP:-172.30.88.10}' }
+    logging: *logs
+  journal:
+    <<: *runtime
+    profiles: [local-journal]
+    restart: unless-stopped
+    command: [node, dist/cli.js, 'journal:serve']
+    environment:
+      JOURNAL_DIR: /journal
+      JOURNAL_SIGNING_KEY_FILE: /run/secrets/journal_signing_key
+      JOURNAL_TOKEN_FILE: /run/secrets/journal_token
+      JOURNAL_TLS_CERT_FILE: /tls/fullchain.pem
+      JOURNAL_TLS_KEY_FILE: /tls/privkey.pem
+    secrets: [journal_signing_key, journal_token]
+    volumes:
+      ['${JOURNAL_DATA_DIR:-./journal-data}:/journal', '${JOURNAL_TLS_DIR:-./tls/journal}:/tls:ro']
+    mem_limit: 96m
+volumes:
+  pg_data:
+networks:
+  private:
+    ipam:
+      config: [{ subnet: '${PRIVATE_SUBNET:-172.30.88.0/24}' }]
+secrets:
+  db_owner_password: { file: '${SECRET_DIR:-./secrets}/db_owner_password.txt' }
+  db_app_password: { file: '${SECRET_DIR:-./secrets}/db_app_password.txt' }
+  db_worker_password: { file: '${SECRET_DIR:-./secrets}/db_worker_password.txt' }
+  visitor_hmac_key: { file: '${SECRET_DIR:-./secrets}/visitor_hmac_key.txt' }
+  ip_hmac_key: { file: '${SECRET_DIR:-./secrets}/ip_hmac_key.txt' }
+  csrf_hmac_key: { file: '${SECRET_DIR:-./secrets}/csrf_hmac_key.txt' }
+  deletion_private_key: { file: '${SECRET_DIR:-./secrets}/deletion_private_key.pem' }
+  deletion_public_key: { file: '${SECRET_DIR:-./secrets}/deletion_public_key.pem' }
+  journal_token: { file: '${SECRET_DIR:-./secrets}/journal_token.txt' }
+  journal_signing_key: { file: '${SECRET_DIR:-./secrets}/journal_signing_key.txt' }
+  journal_ca: { file: '${JOURNAL_CA_FILE:?set JOURNAL_CA_FILE}' }

@@ -1,0 +1,31 @@
+name: webpulse-journal
+services:
+  journal:
+    image: ${WEBPULSE_API_IMAGE:-webpulse-api:0.1.0-m4}
+    command: [node, dist/cli.js, 'journal:serve']
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ['/tmp:size=8m,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      NODE_OPTIONS: --max-old-space-size=128
+      JOURNAL_DIR: /journal
+      JOURNAL_SIGNING_KEY_FILE: /run/secrets/journal_signing_key
+      JOURNAL_TOKEN_FILE: /run/secrets/journal_token
+      JOURNAL_TLS_CERT_FILE: /tls/fullchain.pem
+      JOURNAL_TLS_KEY_FILE: /tls/privkey.pem
+    secrets: [journal_signing_key, journal_token]
+    volumes:
+      - ${JOURNAL_DATA_DIR:-./journal-data}:/journal
+      - ${JOURNAL_TLS_DIR:-./tls/journal}:/tls:ro
+    ports: ['${JOURNAL_BIND_IP:-0.0.0.0}:8443:8443']
+    mem_limit: 192m
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: '3' }
+secrets:
+  journal_signing_key: { file: '${SECRET_DIR:-./secrets}/journal_signing_key.txt' }
+  journal_token: { file: '${SECRET_DIR:-./secrets}/journal_token.txt' }

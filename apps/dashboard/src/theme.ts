@@ -3,6 +3,8 @@ import type { ThemeConfig } from 'antd';
 export const theme: ThemeConfig = {
   token: {
     colorPrimary: '#26776B',
+    colorLink: '#A63C2B',
+    colorLinkHover: '#8D3021',
     colorBgLayout: '#F0EEE7',
     colorBgContainer: '#FAF9F5',
     colorText: '#24312D',

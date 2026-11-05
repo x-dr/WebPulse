@@ -1,0 +1,120 @@
+{
+  "milestone": "M3 米色后台",
+  "verified_on": "2026-11-06",
+  "scope": "local_repository_and_isolated_test_database",
+  "status": "passed",
+  "baseline_commit": "29756dda076516dc6290f36180286a4627cdf42b",
+  "checks": {
+    "typecheck": "passed",
+    "oxlint": "passed",
+    "prettier": "passed",
+    "git_diff_check": "passed",
+    "build": "passed",
+    "frozen_lockfile_offline_install": "passed",
+    "antd_cli_lint": {
+      "issues": 0,
+      "partial": false
+    },
+    "vite_sdk_and_api_proxy": "passed"
+  },
+  "tests": {
+    "unit": {
+      "passed": 46
+    },
+    "pglite": {
+      "passed": 10
+    },
+    "postgresql": {
+      "passed": 67
+    },
+    "sdk_browser": {
+      "passed": 19
+    },
+    "dashboard_browser": {
+      "passed": 17,
+      "skipped": 1,
+      "skip_reason": "duplicate mobile-project viewport sweep; desktop sweep already covers 1440/1024/768/390",
+      "real_http_postgresql_cases": 2
+    },
+    "total_passed": 159
+  },
+  "browser_evidence": {
+    "engine": "Chromium",
+    "viewports": [1440, 1024, 768, 390],
+    "screenshot_data": "mock API fixtures with long paths, full long duration and missing trend point",
+    "keyboard": [
+      "login Enter",
+      "chart table disclosure",
+      "visible focus",
+      "modal focus containment",
+      "Escape cancel"
+    ],
+    "overflow": "none in overview or settings at all four widths"
+  },
+  "live_http_evidence": {
+    "artifacts": "built dashboard assets served with actual Fastify API",
+    "database": "random isolated PostgreSQL schemas",
+    "verified": [
+      "login cookie and CSRF writes",
+      "PV=3 UV=2 bounce_rate=50% average=60m33s from seeded facts",
+      "new/returning shares=50% each",
+      "page and exit ranking",
+      "site name persisted",
+      "retention preview",
+      "pause persisted",
+      "401 returns to login and retains date scope"
+    ],
+    "proxy": "actual Vite /tracker.js returned JavaScript and /api/v1/health/live returned healthy from isolated HTTP API"
+  },
+  "screenshots": [
+    {
+      "file": "docs/verification/m3-overview-1024.png",
+      "sha256": "a76b1050c92ff4b3d23810e517e234ff5b4bb4a1b338e8f7562f2a7a216f1629"
+    },
+    {
+      "file": "docs/verification/m3-overview-1440.png",
+      "sha256": "1e6cd082630238d4051010d9f17d4c4170c12fc58f1cb8d2acaf9a1d321ddc47"
+    },
+    {
+      "file": "docs/verification/m3-overview-390.png",
+      "sha256": "e2480aa4d04d5b5d30486eabba550cb00e71f7817b810c753d39df2baf0865ed"
+    },
+    {
+      "file": "docs/verification/m3-overview-768.png",
+      "sha256": "8d9961cd761601bb052807fae5e3e9c8b9d3cc9bee8c9661b2233886a38e6fd4"
+    },
+    {
+      "file": "docs/verification/m3-settings-1024.png",
+      "sha256": "89811bcbf376a06ce78a4385085877fb4dad48df8810f5853dda28b711133024"
+    },
+    {
+      "file": "docs/verification/m3-settings-1440.png",
+      "sha256": "16cc086f188974d46646d94ba10fff2b482561021ee8579b710909a3942c20c1"
+    },
+    {
+      "file": "docs/verification/m3-settings-390.png",
+      "sha256": "a6fe54ed4bac357f6cd00b6e8a366edd08d9b8123204e1f1f83506364d19ae98"
+    },
+    {
+      "file": "docs/verification/m3-settings-768.png",
+      "sha256": "769ec0e4b35a70ac542c90a5b86c3987b3afe3058dafb2d1a9e9fece3f0dc9d5"
+    }
+  ],
+  "warnings": [
+    "Vite bundle-size warning for entry and chart chunks above 500kB; build succeeds",
+    "target-device weak-network performance and real screen-reader audit not verified"
+  ],
+  "preservation": {
+    "default_schema_migrated": false,
+    "existing_user_data_modified": false,
+    "credentials_rotated": false,
+    "owned_failed_test_schemas_cleaned": 2,
+    "committed": false,
+    "pushed": false,
+    "deployed": false
+  },
+  "remaining_milestones": [
+    "M4 SSE/realtime, production hosting/images, trusted proxy, roles, TLS, backup and deletion journal adapter",
+    "M5 long-window load, security, crash recovery and performance acceptance"
+  ]
+}

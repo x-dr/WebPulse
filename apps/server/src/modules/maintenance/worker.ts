@@ -5,6 +5,7 @@ import { aggregateSite } from '../aggregation/worker.js';
 import { cleanupSite, cleanupActivity } from '../retention/worker.js';
 import { runDeletionBatch, type DeletionJournal } from '../deletion/worker.js';
 import type { DeletionKey } from '../deletion/encryption.js';
+import { checkRecoveryGate } from '../../db/recovery-gate.js';
 
 export function maintenanceWorker(pool: pg.Pool, key?: DeletionKey, journal?: DeletionJournal) {
   const closer = sessionCloser(pool);
@@ -17,6 +18,7 @@ export function maintenanceWorker(pool: pg.Pool, key?: DeletionKey, journal?: De
     if (running || stopped) return;
     running = true;
     try {
+      await checkRecoveryGate(pool);
       // These phases never overlap, keeping the total background occupancy at
       // one connection even while visitor locks are used by the session closer.
       await closer.run();
@@ -67,6 +69,20 @@ export function maintenanceWorker(pool: pg.Pool, key?: DeletionKey, journal?: De
         }
         for (let batch = 0; batch < 10; batch++)
           if (!(await runDeletionBatch(client, key, journal))) break;
+        if (journal?.complete) {
+          const jobs = (
+            await client.query(
+              "SELECT id,result FROM deletion_jobs WHERE status='succeeded' AND completion_sequence IS NULL ORDER BY completed_at LIMIT 10",
+            )
+          ).rows;
+          for (const job of jobs) {
+            const ack = await journal.complete(job.id, job.result);
+            await client.query('UPDATE deletion_jobs SET completion_sequence=$2 WHERE id=$1', [
+              job.id,
+              ack.sequence,
+            ]);
+          }
+        }
         await cleanupActivity(client);
         await client.query(
           "UPDATE job_state SET last_succeeded_at=clock_timestamp(),last_error_code=$2,details=details || $1::jsonb WHERE name='maintenance'",

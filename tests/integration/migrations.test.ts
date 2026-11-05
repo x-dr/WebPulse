@@ -30,7 +30,10 @@ describe('migration lifecycle on PGlite (not real PostgreSQL concurrency)', () =
     await database.query(
       "INSERT INTO sites(public_id,name,primary_origin,allowed_origins,created_at) VALUES ('site_upgrade','Existing','https://test','[]','2026-11-01Z')",
     );
-    expect(await migrate(connection, migrations)).toEqual(['003_reporting.sql']);
+    expect(await migrate(connection, migrations)).toEqual([
+      '003_reporting.sql',
+      '004_deployment.sql',
+    ]);
     expect((await database.query('SELECT public_id FROM sites')).rows).toEqual([
       { public_id: 'site_upgrade' },
     ]);
@@ -51,7 +54,7 @@ describe('migration lifecycle on PGlite (not real PostgreSQL concurrency)', () =
     const result = await database.query<{ count: number }>(
       "SELECT count(*)::integer AS count FROM pg_tables WHERE schemaname = 'public'",
     );
-    expect(result.rows[0]?.count).toBe(25);
+    expect(result.rows[0]?.count).toBe(28);
   });
 
   it('rejects changed SQL and unknown or missing migration history', async () => {

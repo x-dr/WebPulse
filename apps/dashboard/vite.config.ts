@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         '/api': { target: `http://127.0.0.1:${env.PORT || '3000'}`, changeOrigin: false },
+        '/tracker.js': { target: `http://127.0.0.1:${env.PORT || '3000'}`, changeOrigin: false },
       },
     },
   };

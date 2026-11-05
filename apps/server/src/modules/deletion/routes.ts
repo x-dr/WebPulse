@@ -2,9 +2,9 @@ import type { FastifyInstance } from 'fastify';
 import type { AuthService } from '../auth/routes.js';
 import { ApiError } from '../../http/errors.js';
 import { publicJob, requestDeletion } from './jobs.js';
-import type { DeletionKey } from './encryption.js';
+import type { DeletionEncryptor } from './encryption.js';
 
-export function registerDeletion(app: FastifyInstance, auth: AuthService, key?: DeletionKey) {
+export function registerDeletion(app: FastifyInstance, auth: AuthService, key?: DeletionEncryptor) {
   app.delete<{ Params: { site_id: string }; Body: { confirm_name: string } }>(
     '/api/v1/sites/:site_id',
     {
