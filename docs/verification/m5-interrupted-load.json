@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-06",
+  "status": "stopped_on_user_request",
+  "passed": false,
+  "reason": "User explicitly cancelled load testing; no sustained capacity conclusion",
+  "containers_before_cleanup": [
+    {
+      "service": "api",
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    {
+      "service": "db",
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    {
+      "service": "journal",
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    {
+      "service": "web",
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    {
+      "service": "worker",
+      "oom_killed": false,
+      "restart_count": 0
+    }
+  ],
+  "completed_before_cancel": [
+    "production image builds and TLS application startup",
+    "300000 PV, 846000 day members, 90 member days, 365 aggregate days fixture creation",
+    "encrypted backup and VACUUM with matching Compose override"
+  ],
+  "not_completed": [
+    "30-minute sustained workload",
+    "24-hour soak",
+    "full-window pg_restore and deletion replay"
+  ],
+  "cleanup_verified": true
+}

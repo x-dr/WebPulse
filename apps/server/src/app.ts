@@ -16,6 +16,8 @@ import { registerDeletion } from './modules/deletion/routes.js';
 import type { DeletionEncryptor } from './modules/deletion/encryption.js';
 import { registerDiagnostics } from './modules/maintenance/diagnostics.js';
 import { registerRealtime } from './modules/realtime/routes.js';
+import { registerAdmission } from './http/admission.js';
+import { registerTelemetry } from './http/telemetry.js';
 
 export function buildApp(options: {
   ready: () => Promise<void>;
@@ -43,6 +45,13 @@ export function buildApp(options: {
       : false,
   });
   registerRequestBudget(app);
+  const telemetry = registerTelemetry(app);
+  app.addHook('onRequest', (request, reply, done) => {
+    reply.header('x-content-type-options', 'nosniff');
+    if (request.url.startsWith('/api/')) reply.header('cache-control', 'private, no-store');
+    done();
+  });
+  const admission = registerAdmission(app);
   app.setNotFoundHandler((_request, reply) => {
     reply.code(404).send({ error: { code: 'NOT_FOUND', message: '接口不存在' } });
   });
@@ -80,7 +89,16 @@ export function buildApp(options: {
     registerReports(app, options.pool, auth);
     registerRetention(app, auth);
     registerDeletion(app, auth, options.deletionKey);
-    registerDiagnostics(app, auth);
+    registerDiagnostics(app, auth, () => ({
+      ...telemetry(),
+      ...admission(),
+      database_pool: {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount,
+        limit: pool.options.max,
+      },
+    }));
     registerRealtime(app, options.pool, auth, options.sseMax);
     app.get('/tracker.js', async (_request, reply) => {
       reply

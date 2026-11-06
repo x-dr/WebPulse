@@ -12,4 +12,9 @@ export default defineConfig({
       ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
       : {},
   },
+  projects: [
+    { name: 'chromium', use: { browserName: 'chromium' } },
+    { name: 'firefox', use: { browserName: 'firefox', launchOptions: {} } },
+    { name: 'webkit', use: { browserName: 'webkit', launchOptions: {} } },
+  ],
 });

@@ -1,0 +1,69 @@
+{
+  "date": "2026-11-06",
+  "status": "local_hardening_delivered_release_blocked",
+  "production_accepted": false,
+  "scope": "Local repository and isolated tests. Load testing stopped on explicit user request; VPS acceptance deferred.",
+  "tests": {
+    "unit": 67,
+    "integration_pglite": 10,
+    "postgres": 109,
+    "sdk": {
+      "chromium": 19,
+      "firefox": 19,
+      "webkit": 19
+    },
+    "dashboard": 28,
+    "skipped_duplicate_mobile_screenshots": 2,
+    "total_unique_passed": 271,
+    "additional_firefox_race_repetitions": 8,
+    "post_query_change_reporting_regressions": 14
+  },
+  "sdk": {
+    "gzip_bytes": 4317,
+    "limit_bytes": 8192
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "format": "passed",
+    "actionlint": "passed, ShellCheck and pyflakes unavailable",
+    "diff_check": "passed",
+    "frozen_install": "passed inside production Docker build",
+    "modified_node_scripts_syntax": "passed"
+  },
+  "security": {
+    "production_dependencies": "zero reported vulnerabilities",
+    "api_and_web_images": "zero reported vulnerabilities",
+    "database_image_findings": {
+      "LOW": 171,
+      "HIGH": 75,
+      "MEDIUM": 207,
+      "CRITICAL": 4,
+      "UNKNOWN": 1
+    },
+    "publication_blocked": true,
+    "github_actions_executed": false
+  },
+  "fault_evidence": {
+    "real_sigkill_deletion_phase_boundaries": 16,
+    "real_sigkill_aggregation_boundaries": 2,
+    "storage_failure_and_pool_exhaustion": 1,
+    "layered_sql_deadlines": 1,
+    "journal_replay_regression": "passed",
+    "new_full_window_restore": "not completed"
+  },
+  "load": {
+    "status": "cancelled_by_user",
+    "sustained_30_minutes": "not completed",
+    "real_24_hours": "not run",
+    "capacity_claim": null,
+    "resources_cleaned": true
+  },
+  "limits": [
+    "No commit, push, deployment or existing default-schema migration",
+    "No target VPS, public TLS, off-host RPO/RTO or ARM64 execution proof",
+    "Database scanner findings are not automatically waived",
+    "Independent journal remains limited to 4 MiB; segmentation not delivered"
+  ]
+}

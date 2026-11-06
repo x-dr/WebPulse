@@ -1,6 +1,6 @@
 # WebPulse · 网站脉搏
 
-轻量、自托管的网站流量统计系统。已实现 M0–M4 的采集 SDK、统计报表、米色后台、实时 SSE、生产容器及备份恢复工具。生产删除必须取得独立加密清单的持久化确认；HTTP 服务只持删除公钥，独立维护进程持私钥。后台支持登录、总览、实时、来源、页面、访客及站点设置。当前验收均为本地隔离环境，生产部署操作与长期负载另行验证。
+轻量、自托管的网站流量统计系统。已实现 M0–M4，并交付 M5 本机安全加固与常规回归；压测按用户要求停止，数据库镜像扫描仍阻断生产放行。生产删除必须取得独立加密清单的持久化确认；HTTP 服务只持删除公钥，独立维护进程持私钥。后台支持登录、总览、实时、来源、页面、访客及站点设置。当前验收均为本地隔离环境，详见 [M5 验收](docs/M5加固与验收.md)。
 
 采用 Node.js 24、pnpm 10、Fastify 5、TypeScript 7.0.2 strict、React 19、Ant Design 6、TanStack Query 与 PostgreSQL 17。ECharts 6 按需懒加载；报表筛选与页面路由共享 URL。实际版本以各 `package.json` 与 `pnpm-lock.yaml` 为准。
 
@@ -31,6 +31,8 @@ pnpm dev
 
 镜像名自动使用小写的 GitHub 仓库路径：例如 `Owner/WebPulse` 会发布 `ghcr.io/owner/webpulse-api:0.1.0` 与 `ghcr.io/owner/webpulse-web:0.1.0`。每个镜像还包含 `sha-<完整提交 SHA>` 标签；勾选 `latest` 才会额外更新该标签，预发布版本不能勾选。构建完成后，任务摘要提供镜像 digest 和拉取命令；生产优先按 digest 固定镜像。
 
+发布前会调用 [Acceptance and security](.github/workflows/acceptance.yml)，执行常规回归、依赖审计及镜像扫描；检查失败就阻止发布。当前 API/Web 扫描通过，PostgreSQL 基础镜像存在未解决的 HIGH/CRITICAL 扫描项，详见 [报告](docs/verification/m5-image-security.json)。该工作流未包含压测，也尚未在线执行。
+
 工作流文件须先进入默认分支，GitHub 才会显示手动运行入口。首次发布后检查两个 Package 的可见性和仓库访问权限；公开拉取须将 Package 设为 Public，私有镜像须先在目标主机登录 GHCR。把 `.env.production` 的 `WEBPULSE_API_IMAGE`、`WEBPULSE_WEB_IMAGE` 改为本次产物，再按 [部署文档](docs/M4实时与部署.md#github-actions-构建与拉取) 拉取并部署。添加工作流本身不代表镜像已在线发布或通过 ARM64 运行验收。
 
 ## 健康与迁移
@@ -57,7 +59,7 @@ pnpm test
 pnpm test:integration
 pnpm test:postgres
 pnpm build
-pnpm exec playwright install chromium
+pnpm exec playwright install chromium firefox webkit
 pnpm test:e2e
 pnpm test:sdk
 ```
@@ -72,7 +74,7 @@ TypeScript 7 和 Oxlint 通过平台相关的可选依赖提供原生程序，�
 
 `test:e2e` 自动启动 Vite，验证模拟后台 API 下的登录、筛选、错误/重试、设置保护和 1440/1024/768/390px 响应式；另外从构建产物启动真实本机 HTTP + 随机独立 PostgreSQL schema，验证完整后台联调。执行前先 `pnpm build`；也只应连接开发数据库。可用 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 指定已有 Chromium。浏览器、真实 PostgreSQL 和静态检查的实际结果见 [初始化验证记录](docs/初始化验证记录.md)。
 
-构建产物分别位于 `apps/server/dist`、`apps/dashboard/dist`、`packages/shared/dist` 和 `packages/tracker/dist`。`tracker.js` 已可接入，详见 [SDK 接入与隐私说明](packages/tracker/README.md)。`pnpm test:sdk` 使用 Chromium，包含模拟传输的隐私/导航场景和真实本地 HTTP + 独立 PostgreSQL schema 的完整链路；也只应连接开发数据库。
+构建产物分别位于 `apps/server/dist`、`apps/dashboard/dist`、`packages/shared/dist` 和 `packages/tracker/dist`。`tracker.js` 已可接入，详见 [SDK 接入与隐私说明](packages/tracker/README.md)。`pnpm test:sdk` 使用 Chromium、Firefox、WebKit，包含模拟传输的隐私/导航场景和真实本地 HTTP + 独立 PostgreSQL schema 的完整链路；也只应连接开发数据库。
 
 停止本地数据库（保留数据）：
 
@@ -93,7 +95,7 @@ docker compose -f compose.dev.yml stop db
 | `design`           | 原技术设计、评审报告与参考快照             |
 | `docs`             | 实施进度与当前验证证据                     |
 
-M1 的并发/隐私证据见 [M1 采集链路与验收](docs/M1采集链路与验收.md)；统计接口、重算冻结、清理预览、删除闸门与运维命令见 [M2 查询聚合与验收](docs/M2查询聚合与验收.md)。后台页面见 [M3 米色后台与验收](docs/M3米色后台与验收.md)；SSE、生产分权、独立清单及备份恢复见 [M4 实时与部署](docs/M4实时与部署.md)。下一阶段为 **M5 加固与验收**，详见 [实施计划与进度](docs/实施计划与进度.md)。
+M1 的并发/隐私证据见 [M1 采集链路与验收](docs/M1采集链路与验收.md)；统计接口、重算冻结、清理预览、删除闸门与运维命令见 [M2 查询聚合与验收](docs/M2查询聚合与验收.md)。后台页面见 [M3 米色后台与验收](docs/M3米色后台与验收.md)；SSE、生产分权、独立清单及备份恢复见 [M4 实时与部署](docs/M4实时与部署.md)。**M5 本机加固与回归已交付，完整生产验收未放行**，详见 [M5 验收](docs/M5加固与验收.md)及 [实施计划与进度](docs/实施计划与进度.md)。
 
 ## M1 本地配置与管理员
 

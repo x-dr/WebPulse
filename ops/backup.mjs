@@ -5,10 +5,10 @@ import { join, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { createReadStream } from 'node:fs';
 import { encrypt } from './backup-crypto.mjs';
+import { composeArguments } from './compose.mjs';
 
 // Environment paths contain no credentials. Database/key values are read via files.
-const envFile = resolve(process.env.WEBPULSE_ENV_FILE ?? '.env.production');
-const compose = ['compose', '--env-file', envFile, '-f', 'compose.yml'];
+const compose = composeArguments();
 function command(args, input) {
   return new Promise((resolveCommand, reject) => {
     const child = spawn('docker', [...compose, ...args], { stdio: ['pipe', 'pipe', 'pipe'] });

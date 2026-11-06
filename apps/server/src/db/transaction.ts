@@ -64,7 +64,7 @@ export async function transaction<T>(
       `BEGIN ISOLATION LEVEL ${options.snapshot ? 'REPEATABLE READ' : 'READ COMMITTED'}${options.readOnly ? ' READ ONLY' : ''}`,
     );
     await client.query(
-      "SET LOCAL lock_timeout = '750ms'; SET LOCAL statement_timeout = '1500ms'; SET LOCAL transaction_timeout = '4s'; SET LOCAL idle_in_transaction_session_timeout = '1500ms'",
+      `SET LOCAL lock_timeout = '750ms'; SET LOCAL statement_timeout = '${options.readOnly ? 3000 : 1500}ms'; SET LOCAL transaction_timeout = '4s'; SET LOCAL idle_in_transaction_session_timeout = '1500ms'`,
     );
     const result = await work(client);
     if (destroyed || signal.aborted || Date.now() >= deadline)

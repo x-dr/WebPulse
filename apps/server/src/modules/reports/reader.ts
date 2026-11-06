@@ -105,12 +105,12 @@ export async function readReport(
       await client.query(
         `WITH people AS (
       SELECT visitor_key,first_seen_pv_at FROM visitor_days WHERE site_id=$1 AND local_date=ANY($2::date[])
-      UNION ALL SELECT e.visitor_key,e.first_seen_pv_at FROM events e WHERE e.site_id=$1 AND e.event_type='page_view' AND EXISTS(SELECT 1 FROM jsonb_to_recordset($3::jsonb) AS r(start timestamptz,"end" timestamptz) WHERE e.occurred_at>=r.start AND e.occurred_at<r."end")
+      UNION ALL SELECT e.visitor_key,e.first_seen_pv_at FROM events e WHERE e.site_id=$1 AND e.event_type='page_view' AND e.occurred_at >= $4 AND e.occurred_at < $5 AND EXISTS(SELECT 1 FROM jsonb_to_recordset($3::jsonb) AS r(start timestamptz,"end" timestamptz) WHERE e.occurred_at>=r.start AND e.occurred_at<r."end")
     ), people_distinct AS (SELECT visitor_key,min(first_seen_pv_at) AS first_seen,bool_or(first_seen_pv_at IS NULL) AS missing FROM people GROUP BY visitor_key), ips AS (
       SELECT ip_key FROM ip_days WHERE site_id=$1 AND local_date=ANY($2::date[])
-      UNION SELECT e.ip_key FROM events e WHERE e.site_id=$1 AND e.event_type='page_view' AND EXISTS(SELECT 1 FROM jsonb_to_recordset($3::jsonb) AS r(start timestamptz,"end" timestamptz) WHERE e.occurred_at>=r.start AND e.occurred_at<r."end")
+      UNION SELECT e.ip_key FROM events e WHERE e.site_id=$1 AND e.event_type='page_view' AND e.occurred_at >= $4 AND e.occurred_at < $5 AND EXISTS(SELECT 1 FROM jsonb_to_recordset($3::jsonb) AS r(start timestamptz,"end" timestamptz) WHERE e.occurred_at>=r.start AND e.occurred_at<r."end")
     ) SELECT count(*) AS uv,count(*) FILTER(WHERE first_seen >= $4) AS new_visitors,count(*) FILTER(WHERE first_seen < $4) AS returning_visitors,count(*) FILTER(WHERE missing) AS missing,(SELECT count(*) FROM ips) AS ip FROM people_distinct`,
-        [site.id, full.map((s) => s.date), JSON.stringify(bounds), range.start],
+        [site.id, full.map((s) => s.date), JSON.stringify(bounds), range.start, range.end],
       )
     ).rows[0];
     for (const metric of ['uv', 'ip', 'new_visitors', 'returning_visitors'] as const)

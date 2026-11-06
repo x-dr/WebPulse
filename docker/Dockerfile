@@ -1,5 +1,6 @@
-ARG NODE_IMAGE=node:24.18.0-bookworm-slim@sha256:6f7b03f7c2c8e2e784dcf9295400527b9b1270fd37b7e9a7285cf83b6951452d
-ARG NGINX_IMAGE=nginx:1.30.6-alpine@sha256:0e52bd054126cdc040b1276c0af347aeb02a41b9cfe305d6094767ac30e97949
+ARG NODE_IMAGE=node:24.22.2-bookworm-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
+ARG RUNTIME_NODE_IMAGE=node:24.22.2-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
+ARG NGINX_IMAGE=nginx:1.30.6-alpine@sha256:583b7f2fce1cdb8da5ad5c39ebd3c33b98b87d493190e548bdee1fa8c619c311
 FROM ${NODE_IMAGE} AS build
 WORKDIR /repo
 RUN npm install --global pnpm@10.20.0
@@ -14,9 +15,11 @@ COPY packages/ ./packages/
 RUN pnpm -r build
 RUN pnpm --filter @webpulse/server deploy --prod --legacy /release
 
-FROM ${NODE_IMAGE} AS api
+FROM ${RUNTIME_NODE_IMAGE} AS api
 ENV NODE_ENV=production
 WORKDIR /app
+# Production commands use Node directly. Do not ship package managers and their dependencies.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /opt/yarn* /usr/local/bin/yarn*
 COPY --from=build --chown=node:node /release/ ./
 COPY --from=build --chown=node:node /repo/packages/tracker/dist/tracker.js ./tracker.js
 ENV TRACKER_FILE=/app/tracker.js

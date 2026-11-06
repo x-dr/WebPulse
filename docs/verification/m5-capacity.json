@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-06",
+  "status": "cancelled_by_user",
+  "passed": false,
+  "scope": "Local load testing was explicitly stopped by the user. Target VPS testing deferred.",
+  "completed_evidence": "m5-interrupted-load.json",
+  "capacity_claim": null,
+  "full_window_restore_completed": false,
+  "prior_failed_probe": "m5-capacity-pre-fix.json"
+}

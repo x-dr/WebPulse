@@ -2,7 +2,11 @@ import type { FastifyInstance } from 'fastify';
 import type { AuthService } from '../auth/routes.js';
 import { lockSite } from '../sites/store.js';
 
-export function registerDiagnostics(app: FastifyInstance, auth: AuthService) {
+export function registerDiagnostics(
+  app: FastifyInstance,
+  auth: AuthService,
+  runtime: () => unknown,
+) {
   app.get<{ Params: { site_id: string } }>(
     '/api/v1/sites/:site_id/diagnostics',
     async (request, reply) => {
@@ -57,6 +61,7 @@ export function registerDiagnostics(app: FastifyInstance, auth: AuthService) {
             gaps,
             jobs,
             worker,
+            runtime: runtime(),
             rejection_counts: { available: false, reason: 'not_persisted' },
           };
         }),

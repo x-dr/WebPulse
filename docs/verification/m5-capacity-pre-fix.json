@@ -1,0 +1,827 @@
+{
+  "started_at": "2026-11-06T15:14:19.970Z",
+  "scope": "isolated local production containers, verified test TLS, per-container CPU/memory quotas; not target VPS proof",
+  "baseline": {
+    "cpu_quotas": 1,
+    "memory_limit_mib": 688,
+    "journal_limit_mib": 96,
+    "physical_host_1gb": false
+  },
+  "requirements": {
+    "steady_seconds": 1800,
+    "soak_seconds": 86400
+  },
+  "passed": false,
+  "checks": ["full retained-window fixture and cross-midnight sessions"],
+  "samples": [
+    {
+      "at": "2026-11-06T15:17:57.603Z",
+      "containers": [
+        {
+          "BlockIO": "291MB / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "656376eec7b737924f523d70ac53eeef15049b3a9ea2e6837d16c2a98f26a8c4",
+          "ID": "656376eec7b7",
+          "MemPerc": "21.81%",
+          "MemUsage": "41.87MiB / 192MiB",
+          "Name": "webpulse-m5-8531b43217-api-1",
+          "NetIO": "54kB / 51.9kB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "13.3GB / 22.7GB",
+          "CPUPerc": "0.45%",
+          "Container": "2857a79ec2b686c87f1cf07ff11dfabaf0dfc3f19d0774368ad46c51421b88d3",
+          "ID": "2857a79ec2b6",
+          "MemPerc": "43.47%",
+          "MemUsage": "139.1MiB / 320MiB",
+          "Name": "webpulse-m5-8531b43217-db-1",
+          "NetIO": "82.6kB / 62.5kB",
+          "PIDs": "8"
+        },
+        {
+          "BlockIO": "32.5MB / 0B",
+          "CPUPerc": "2.86%",
+          "Container": "2d96bc9d549f09bde946af1bde10ea021af7e1e30b711dee33e52e204181be3c",
+          "ID": "2d96bc9d549f",
+          "MemPerc": "26.80%",
+          "MemUsage": "12.86MiB / 48MiB",
+          "Name": "webpulse-m5-8531b43217-web-1",
+          "NetIO": "17.2kB / 20.8kB",
+          "PIDs": "4"
+        },
+        {
+          "BlockIO": "33.2MB / 0B",
+          "CPUPerc": "15.16%",
+          "Container": "a72c38194488219f1aca8bde6fcddeefced5940cc3f8f38d5ed2983e2faf9198",
+          "ID": "a72c38194488",
+          "MemPerc": "24.28%",
+          "MemUsage": "31.07MiB / 128MiB",
+          "Name": "webpulse-m5-8531b43217-worker-1",
+          "NetIO": "448B / 448B",
+          "PIDs": "12"
+        }
+      ],
+      "runtime": {
+        "responses": {
+          "success": 23,
+          "rejected": 0,
+          "failed": 0
+        },
+        "latency_buckets": [
+          {
+            "upper_ms": 10,
+            "count": 1
+          },
+          {
+            "upper_ms": 25,
+            "count": 4
+          },
+          {
+            "upper_ms": 50,
+            "count": 7
+          },
+          {
+            "upper_ms": 100,
+            "count": 4
+          },
+          {
+            "upper_ms": 150,
+            "count": 4
+          },
+          {
+            "upper_ms": 200,
+            "count": 1
+          },
+          {
+            "upper_ms": 500,
+            "count": 2
+          },
+          {
+            "upper_ms": 1000,
+            "count": 0
+          },
+          {
+            "upper_ms": 2000,
+            "count": 0
+          },
+          {
+            "upper_ms": 5000,
+            "count": 0
+          },
+          {
+            "upper_ms": null,
+            "count": 0
+          }
+        ],
+        "memory": {
+          "rss": 56459264,
+          "heapTotal": 20586496,
+          "heapUsed": 18470896,
+          "external": 3295320,
+          "arrayBuffers": 352037
+        },
+        "uptime_seconds": 160.25365924,
+        "active_requests": 1,
+        "rejected_requests": 0,
+        "capacity": 64,
+        "database_pool": {
+          "total": 1,
+          "idle": 0,
+          "waiting": 0,
+          "limit": 7
+        }
+      }
+    },
+    {
+      "at": "2026-11-06T15:18:30.957Z",
+      "containers": [
+        {
+          "BlockIO": "299MB / 0B",
+          "CPUPerc": "3.03%",
+          "Container": "656376eec7b737924f523d70ac53eeef15049b3a9ea2e6837d16c2a98f26a8c4",
+          "ID": "656376eec7b7",
+          "MemPerc": "29.51%",
+          "MemUsage": "56.66MiB / 192MiB",
+          "Name": "webpulse-m5-8531b43217-api-1",
+          "NetIO": "2.08MB / 2.3MB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "1.44GB / 89.5MB",
+          "CPUPerc": "2.63%",
+          "Container": "fedb173f83ec88163d8481e66a40cd92da75de192b3827f956f71daa0e7abc09",
+          "ID": "fedb173f83ec",
+          "MemPerc": "15.43%",
+          "MemUsage": "59.25MiB / 384MiB",
+          "Name": "webpulse-m5-8531b43217-db-1",
+          "NetIO": "1.3MB / 1.11MB",
+          "PIDs": "8"
+        },
+        {
+          "BlockIO": "32.5MB / 0B",
+          "CPUPerc": "0.22%",
+          "Container": "2d96bc9d549f09bde946af1bde10ea021af7e1e30b711dee33e52e204181be3c",
+          "ID": "2d96bc9d549f",
+          "MemPerc": "23.67%",
+          "MemUsage": "11.36MiB / 48MiB",
+          "Name": "webpulse-m5-8531b43217-web-1",
+          "NetIO": "393kB / 539kB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "49MB / 0B",
+          "CPUPerc": "0.02%",
+          "Container": "a72c38194488219f1aca8bde6fcddeefced5940cc3f8f38d5ed2983e2faf9198",
+          "ID": "a72c38194488",
+          "MemPerc": "22.78%",
+          "MemUsage": "29.16MiB / 128MiB",
+          "Name": "webpulse-m5-8531b43217-worker-1",
+          "NetIO": "85kB / 99.5kB",
+          "PIDs": "12"
+        }
+      ],
+      "runtime": {
+        "responses": {
+          "success": 410,
+          "rejected": 0,
+          "failed": 5
+        },
+        "latency_buckets": [
+          {
+            "upper_ms": 10,
+            "count": 290
+          },
+          {
+            "upper_ms": 25,
+            "count": 79
+          },
+          {
+            "upper_ms": 50,
+            "count": 25
+          },
+          {
+            "upper_ms": 100,
+            "count": 5
+          },
+          {
+            "upper_ms": 150,
+            "count": 4
+          },
+          {
+            "upper_ms": 200,
+            "count": 2
+          },
+          {
+            "upper_ms": 500,
+            "count": 7
+          },
+          {
+            "upper_ms": 1000,
+            "count": 3
+          },
+          {
+            "upper_ms": 2000,
+            "count": 0
+          },
+          {
+            "upper_ms": 5000,
+            "count": 0
+          },
+          {
+            "upper_ms": null,
+            "count": 0
+          }
+        ],
+        "memory": {
+          "rss": 73646080,
+          "heapTotal": 27926528,
+          "heapUsed": 20859320,
+          "external": 3694559,
+          "arrayBuffers": 751236
+        },
+        "uptime_seconds": 193.609903196,
+        "active_requests": 1,
+        "rejected_requests": 0,
+        "capacity": 64,
+        "database_pool": {
+          "total": 2,
+          "idle": 1,
+          "waiting": 0,
+          "limit": 7
+        }
+      }
+    },
+    {
+      "at": "2026-11-06T15:19:01.666Z",
+      "containers": [
+        {
+          "BlockIO": "299MB / 967kB",
+          "CPUPerc": "0.01%",
+          "Container": "656376eec7b737924f523d70ac53eeef15049b3a9ea2e6837d16c2a98f26a8c4",
+          "ID": "656376eec7b7",
+          "MemPerc": "26.70%",
+          "MemUsage": "51.26MiB / 192MiB",
+          "Name": "webpulse-m5-8531b43217-api-1",
+          "NetIO": "3.69MB / 3.93MB",
+          "PIDs": "12"
+        },
+        {
+          "BlockIO": "2.25GB / 261MB",
+          "CPUPerc": "4.95%",
+          "Container": "fedb173f83ec88163d8481e66a40cd92da75de192b3827f956f71daa0e7abc09",
+          "ID": "fedb173f83ec",
+          "MemPerc": "40.13%",
+          "MemUsage": "154.1MiB / 384MiB",
+          "Name": "webpulse-m5-8531b43217-db-1",
+          "NetIO": "2.85MB / 2.56MB",
+          "PIDs": "9"
+        },
+        {
+          "BlockIO": "32.5MB / 0B",
+          "CPUPerc": "1.92%",
+          "Container": "2d96bc9d549f09bde946af1bde10ea021af7e1e30b711dee33e52e204181be3c",
+          "ID": "2d96bc9d549f",
+          "MemPerc": "17.42%",
+          "MemUsage": "8.359MiB / 48MiB",
+          "Name": "webpulse-m5-8531b43217-web-1",
+          "NetIO": "680kB / 940kB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "49.1MB / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "a72c38194488219f1aca8bde6fcddeefced5940cc3f8f38d5ed2983e2faf9198",
+          "ID": "a72c38194488",
+          "MemPerc": "23.02%",
+          "MemUsage": "29.46MiB / 128MiB",
+          "Name": "webpulse-m5-8531b43217-worker-1",
+          "NetIO": "112kB / 127kB",
+          "PIDs": "12"
+        }
+      ],
+      "runtime": {
+        "responses": {
+          "success": 713,
+          "rejected": 0,
+          "failed": 5
+        },
+        "latency_buckets": [
+          {
+            "upper_ms": 10,
+            "count": 492
+          },
+          {
+            "upper_ms": 25,
+            "count": 169
+          },
+          {
+            "upper_ms": 50,
+            "count": 32
+          },
+          {
+            "upper_ms": 100,
+            "count": 5
+          },
+          {
+            "upper_ms": 150,
+            "count": 4
+          },
+          {
+            "upper_ms": 200,
+            "count": 2
+          },
+          {
+            "upper_ms": 500,
+            "count": 10
+          },
+          {
+            "upper_ms": 1000,
+            "count": 4
+          },
+          {
+            "upper_ms": 2000,
+            "count": 0
+          },
+          {
+            "upper_ms": 5000,
+            "count": 0
+          },
+          {
+            "upper_ms": null,
+            "count": 0
+          }
+        ],
+        "memory": {
+          "rss": 74244096,
+          "heapTotal": 28450816,
+          "heapUsed": 23755192,
+          "external": 4686837,
+          "arrayBuffers": 1743514
+        },
+        "uptime_seconds": 224.319067923,
+        "active_requests": 1,
+        "rejected_requests": 0,
+        "capacity": 64,
+        "database_pool": {
+          "total": 2,
+          "idle": 1,
+          "waiting": 0,
+          "limit": 7
+        }
+      }
+    }
+  ],
+  "reports": [
+    {
+      "days": 0,
+      "status": 200,
+      "ms": 409.03239400000894
+    },
+    {
+      "days": 30,
+      "status": 200,
+      "ms": 844.6970799999835
+    },
+    {
+      "days": 90,
+      "status": 200,
+      "ms": 642.4976049999823
+    },
+    {
+      "days": 0,
+      "status": 200,
+      "ms": 469.1783329999889
+    },
+    {
+      "days": 30,
+      "status": 200,
+      "ms": 568.338419000007
+    },
+    {
+      "days": 90,
+      "status": 200,
+      "ms": 354.445321999985
+    },
+    {
+      "days": 0,
+      "status": 200,
+      "ms": 127.73315300000831
+    },
+    {
+      "days": 30,
+      "status": 200,
+      "ms": 336.47448299999814
+    },
+    {
+      "days": 90,
+      "status": 200,
+      "ms": 336.2778709999984
+    }
+  ],
+  "images": [
+    "sha256:a38854c811d05bada8bf9aa8b0d6c097b17405591d8f10e9fd56236fdd79f21c",
+    "sha256:c98a729ee486d67efbddffa8300adc824799455e6ea8f399e12b0f1037e84ed7"
+  ],
+  "fixture": {
+    "pv": 300000,
+    "member_rows": 846000,
+    "member_days": 90,
+    "aggregate_days": 365,
+    "cross_midnight_sessions": 150,
+    "relation_bytes": 753246208
+  },
+  "query_plans": {
+    "page": [
+      {
+        "Plan": {
+          "Node Type": "Index Scan",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Scan Direction": "Forward",
+          "Index Name": "events_page_view_idx",
+          "Relation Name": "events",
+          "Alias": "events",
+          "Startup Cost": 0.55,
+          "Total Cost": 8.57,
+          "Plan Rows": 1,
+          "Plan Width": 307,
+          "Actual Startup Time": 0.447,
+          "Actual Total Time": 0.448,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Index Cond": "((site_id = 1) AND (page_view_id = (InitPlan 1).col1))",
+          "Rows Removed by Index Recheck": 0,
+          "Shared Hit Blocks": 4,
+          "Shared Read Blocks": 4,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0,
+          "Plans": [
+            {
+              "Node Type": "Limit",
+              "Parent Relationship": "InitPlan",
+              "Subplan Name": "InitPlan 1",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 0,
+              "Total Cost": 0.12,
+              "Plan Rows": 1,
+              "Plan Width": 16,
+              "Actual Startup Time": 0.143,
+              "Actual Total Time": 0.144,
+              "Actual Rows": 1,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 1,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "page_views",
+                  "Alias": "page_views",
+                  "Startup Cost": 0,
+                  "Total Cost": 7454,
+                  "Plan Rows": 59640,
+                  "Plan Width": 16,
+                  "Actual Startup Time": 0.143,
+                  "Actual Total Time": 0.143,
+                  "Actual Rows": 1,
+                  "Actual Loops": 1,
+                  "Filter": "(site_id = 1)",
+                  "Rows Removed by Filter": 0,
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 1,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            }
+          ]
+        },
+        "Planning": {
+          "Shared Hit Blocks": 298,
+          "Shared Read Blocks": 7,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 1.905,
+        "Triggers": [],
+        "Execution Time": 0.642
+      }
+    ],
+    "session": [
+      {
+        "Plan": {
+          "Node Type": "Index Scan",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Scan Direction": "Forward",
+          "Index Name": "page_views_session_idx",
+          "Relation Name": "page_views",
+          "Alias": "page_views",
+          "Startup Cost": 0.62,
+          "Total Cost": 8.64,
+          "Plan Rows": 1,
+          "Plan Width": 73,
+          "Actual Startup Time": 1.298,
+          "Actual Total Time": 1.299,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Index Cond": "((site_id = 1) AND (session_id = (InitPlan 1).col1))",
+          "Rows Removed by Index Recheck": 0,
+          "Shared Hit Blocks": 5,
+          "Shared Read Blocks": 3,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0,
+          "Plans": [
+            {
+              "Node Type": "Limit",
+              "Parent Relationship": "InitPlan",
+              "Subplan Name": "InitPlan 1",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 0,
+              "Total Cost": 0.2,
+              "Plan Rows": 1,
+              "Plan Width": 16,
+              "Actual Startup Time": 0.883,
+              "Actual Total Time": 0.883,
+              "Actual Rows": 1,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 1,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "sessions",
+                  "Alias": "sessions",
+                  "Startup Cost": 0,
+                  "Total Cost": 11831,
+                  "Plan Rows": 59790,
+                  "Plan Width": 16,
+                  "Actual Startup Time": 0.882,
+                  "Actual Total Time": 0.882,
+                  "Actual Rows": 1,
+                  "Actual Loops": 1,
+                  "Filter": "(site_id = 1)",
+                  "Rows Removed by Filter": 0,
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 1,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            }
+          ]
+        },
+        "Planning": {
+          "Shared Hit Blocks": 244,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.588,
+        "Triggers": [],
+        "Execution Time": 1.53
+      }
+    ],
+    "visitor": [
+      {
+        "Plan": {
+          "Node Type": "Index Scan",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Scan Direction": "Forward",
+          "Index Name": "sessions_visitor_idx",
+          "Relation Name": "sessions",
+          "Alias": "sessions",
+          "Startup Cost": 0.53,
+          "Total Cost": 8.55,
+          "Plan Rows": 1,
+          "Plan Width": 177,
+          "Actual Startup Time": 0.901,
+          "Actual Total Time": 0.902,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Index Cond": "((site_id = 1) AND (visitor_key = (InitPlan 1).col1))",
+          "Rows Removed by Index Recheck": 0,
+          "Shared Hit Blocks": 4,
+          "Shared Read Blocks": 4,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0,
+          "Plans": [
+            {
+              "Node Type": "Limit",
+              "Parent Relationship": "InitPlan",
+              "Subplan Name": "InitPlan 1",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 0,
+              "Total Cost": 0.11,
+              "Plan Rows": 1,
+              "Plan Width": 33,
+              "Actual Startup Time": 0.274,
+              "Actual Total Time": 0.274,
+              "Actual Rows": 1,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 1,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "visitors",
+                  "Alias": "visitors",
+                  "Startup Cost": 0,
+                  "Total Cost": 6556.5,
+                  "Plan Rows": 59746,
+                  "Plan Width": 33,
+                  "Actual Startup Time": 0.273,
+                  "Actual Total Time": 0.273,
+                  "Actual Rows": 1,
+                  "Actual Loops": 1,
+                  "Filter": "(site_id = 1)",
+                  "Rows Removed by Filter": 0,
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 1,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            }
+          ]
+        },
+        "Planning": {
+          "Shared Hit Blocks": 307,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.685,
+        "Triggers": [],
+        "Execution Time": 1.138
+      }
+    ]
+  },
+  "steady": {
+    "duration_seconds": 59.909684677000016,
+    "rps": 10,
+    "mix": "baseline",
+    "dropped": 0,
+    "requests": 600,
+    "accepted": 595,
+    "rate_limited": 0,
+    "busy": 1,
+    "errors": 4,
+    "responses": {
+      "204:accepted": 595,
+      "503:storage_unavailable": 4,
+      "503:server_busy": 1
+    },
+    "p95_ms": 47.124546000006376,
+    "p99_ms": 147.8125,
+    "cold_sites": {
+      "requests": 240,
+      "accepted": 238,
+      "rate_limited": 0,
+      "busy": 0,
+      "errors": 2,
+      "responses": {
+        "204:accepted": 238,
+        "503:storage_unavailable": 2
+      },
+      "p95_ms": 38.278564999985974,
+      "p99_ms": 147.0386409999919
+    },
+    "operations": {
+      "pv": {
+        "requests": 180,
+        "accepted": 180,
+        "rate_limited": 0,
+        "busy": 0,
+        "errors": 0,
+        "responses": {
+          "204:accepted": 180
+        },
+        "p95_ms": 57.50841100001708,
+        "p99_ms": 148.51357700000517
+      },
+      "heartbeat": {
+        "requests": 360,
+        "accepted": 355,
+        "rate_limited": 0,
+        "busy": 1,
+        "errors": 4,
+        "responses": {
+          "204:accepted": 355,
+          "503:storage_unavailable": 4,
+          "503:server_busy": 1
+        },
+        "p95_ms": 37.082806999998866,
+        "p99_ms": 147.09991499999887
+      },
+      "interaction": {
+        "requests": 60,
+        "accepted": 60,
+        "rate_limited": 0,
+        "busy": 0,
+        "errors": 0,
+        "responses": {
+          "204:accepted": 60
+        },
+        "p95_ms": 47.18071499996586,
+        "p99_ms": 254.21217399998568
+      }
+    },
+    "confirmed_pv_count": 260
+  },
+  "error": "docker failed (2)",
+  "finished_at": "2026-11-06T15:19:02.467Z",
+  "total_seconds": 282.497,
+  "diagnosis": "Acceptance backup omitted the resource Compose override and recreated the database. Fixed by sharing Compose arguments in backup and restore; not a capacity pass."
+}

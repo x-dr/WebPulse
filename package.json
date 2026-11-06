@@ -23,7 +23,8 @@
     "test:sdk": "pnpm --filter @webpulse/shared build && pnpm --filter @webpulse/tracker build && playwright test -c playwright.sdk.config.ts",
     "maintenance:run": "pnpm --filter @webpulse/server maintenance:run",
     "visitor:delete": "pnpm --filter @webpulse/server visitor:delete",
-    "deletion:retry": "pnpm --filter @webpulse/server deletion:retry"
+    "deletion:retry": "pnpm --filter @webpulse/server deletion:retry",
+    "test:capacity": "node tests/performance/acceptance.mjs"
   },
   "devDependencies": {
     "typescript": "7.0.2",

@@ -21,7 +21,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  acceptance:
+    uses: ./.github/workflows/acceptance.yml
+
   build:
+    needs: acceptance
     name: Build and publish ${{ matrix.target }}
     runs-on: ubuntu-latest
     timeout-minutes: 60

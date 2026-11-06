@@ -59,5 +59,13 @@ export async function browserIdentity(
     }
     return cid;
   };
-  return navigator.locks ? navigator.locks.request(identityStorageKey(site), load) : load();
+  if (!navigator.locks) return load();
+  return navigator.locks.request(identityStorageKey(site), async () => {
+    // Firefox keeps localStorage snapshots for a task. Cross a task boundary
+    // before reading and before releasing the lock so another tab sees the write.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const cid = load();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    return alive() ? cid : undefined;
+  });
 }

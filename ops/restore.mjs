@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { decrypt } from './backup-crypto.mjs';
+import { composeArguments } from './compose.mjs';
 
 const manifestPath = resolve(process.argv[2]);
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
@@ -22,13 +23,7 @@ for (const [suffix, checksum] of [
   for await (const chunk of createReadStream(`${base}.${suffix}.wpbackup`)) hash.update(chunk);
   if (hash.digest('hex') !== checksum) throw new Error('Backup checksum mismatch');
 }
-const compose = [
-  'compose',
-  '--env-file',
-  resolve(process.env.WEBPULSE_ENV_FILE ?? '.env.production'),
-  '-f',
-  'compose.yml',
-];
+const compose = composeArguments();
 async function command(args, input) {
   const child = spawn('docker', [...compose, ...args], { stdio: ['pipe', 'pipe', 'pipe'] });
   child.stdout.resume();
