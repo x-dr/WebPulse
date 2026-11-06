@@ -25,6 +25,14 @@ pnpm dev
 
 `compose.dev.yml` 只启动开发数据库，端口仅绑定 loopback，数据保存在 `webpulse-dev_pg_dev_data` 卷，使用单一开发角色。生产使用根目录 `compose.yml`、`.env.production.example` 和 `docker/`，包含显式 `database:prepare`、独立维护角色、TLS 与静态托管；完整步骤见 [M4 部署与恢复](docs/M4实时与部署.md)。`design/reference/` 保留原始设计快照。
 
+## GitHub Actions 镜像构建
+
+[Build Docker images](.github/workflows/docker.yml) 仅手动触发，普通 push、PR 或创建 tag 不会自动发布。在 GitHub 的 **Actions → Build Docker images → Run workflow** 选择源码分支，填写 `version`（如 `0.1.0`、`v0.1.0` 或 `0.1.0-rc.1`），即可构建并推送 `linux/amd64`、`linux/arm64` 的 API/Web 镜像到 GHCR。使用仓库自带的 `GITHUB_TOKEN`，无需配置 Docker Hub 凭据；仓库或组织须允许工作流写入 Packages。
+
+镜像名自动使用小写的 GitHub 仓库路径：例如 `Owner/WebPulse` 会发布 `ghcr.io/owner/webpulse-api:0.1.0` 与 `ghcr.io/owner/webpulse-web:0.1.0`。每个镜像还包含 `sha-<完整提交 SHA>` 标签；勾选 `latest` 才会额外更新该标签，预发布版本不能勾选。构建完成后，任务摘要提供镜像 digest 和拉取命令；生产优先按 digest 固定镜像。
+
+工作流文件须先进入默认分支，GitHub 才会显示手动运行入口。首次发布后检查两个 Package 的可见性和仓库访问权限；公开拉取须将 Package 设为 Public，私有镜像须先在目标主机登录 GHCR。把 `.env.production` 的 `WEBPULSE_API_IMAGE`、`WEBPULSE_WEB_IMAGE` 改为本次产物，再按 [部署文档](docs/M4实时与部署.md#github-actions-构建与拉取) 拉取并部署。添加工作流本身不代表镜像已在线发布或通过 ARM64 运行验收。
+
 ## 健康与迁移
 
 ```bash
