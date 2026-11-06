@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-06",
+  "status": "local_verified",
+  "design": "docs/ui-redesign-concept-v3.png",
+  "background": "#f5f7fa",
+  "scope": ["dashboard", "browser_acceptance", "documentation"],
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed",
+    "format_check": "passed",
+    "diff_check": "passed",
+    "build": "passed_with_existing_chunk_size_warning",
+    "antd_lint": { "issues": 0, "partial": false },
+    "unit": { "passed": 64, "failed": 0 },
+    "browser": {
+      "command": "pnpm exec playwright test --workers=2",
+      "passed": 21,
+      "failed": 0,
+      "skipped": 1,
+      "skip_reason": "duplicate mobile viewport sweep",
+      "projects": ["desktop", "mobile"],
+      "real_http_postgres_tests": 2,
+      "real_sse_tests": 2
+    }
+  },
+  "viewports": {
+    "overview_settings": [1440, 1024, 768, 390, 320],
+    "realtime": [1440, 1024, 768, 390]
+  },
+  "evidence": {
+    "overview_settings": "mock_api_browser_screenshots",
+    "realtime": "local_http_sse_isolated_postgres",
+    "production_data": false,
+    "page_errors": 0,
+    "horizontal_page_overflow": false
+  },
+  "environment": "Initial sandbox loopback EPERM; browser checks passed in environment allowing local listeners.",
+  "not_run": [
+    "sdk_browser_suite",
+    "pglite_suite",
+    "postgres_specialized_suite",
+    "container_suite",
+    "screen_reader_audit",
+    "cross_browser_audit"
+  ],
+  "committed": false,
+  "pushed": false,
+  "deployed": false
+}

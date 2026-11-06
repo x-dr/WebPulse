@@ -22,6 +22,8 @@ export type Site = Retention & {
 export type ReportMeta = {
   timezone: string;
   as_of: string;
+  start_utc?: string;
+  effective_start_utc?: string;
   effective_end_utc: string;
   is_provisional: boolean;
   aggregation_lag_seconds?: number;

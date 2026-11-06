@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-06",
+  "status": "local_verified",
+  "fixes": [
+    "First observed natural day starts at observed_from in the site timezone",
+    "Overview, visitors and rankings share the observation boundary",
+    "Minute, hour and day trends clip their initial bucket and mark incomplete buckets",
+    "Trend responses include meta.unavailable_reasons required by the dashboard",
+    "Reports expose effective_start_utc and show a first-day observation notice"
+  ],
+  "preserved": [
+    "Before-site-created dates remain unavailable",
+    "Coverage gaps and retention loss remain unavailable",
+    "Missing metrics and undefined ended-session rates are never fabricated as zero",
+    "Existing uncommitted UI and SDK work"
+  ],
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed",
+    "changed_file_format_check": "passed",
+    "diff_check": "passed",
+    "build": "passed",
+    "unit": { "passed": 64, "failed": 0 },
+    "postgres_reports": {
+      "command": "pnpm exec vitest run --project postgres tests/postgres/reporting-observation.test.ts tests/postgres/reporting.test.ts tests/postgres/reporting-boundaries.test.ts",
+      "passed": 14,
+      "failed": 0,
+      "new_regressions": 5,
+      "before_fix": "All five new regressions reproduced the bugs in isolated PostgreSQL schemas"
+    },
+    "browser": {
+      "files": ["tests/e2e/first-day-reporting.spec.ts", "tests/e2e/live-dashboard.spec.ts"],
+      "projects": ["desktop", "mobile"],
+      "passed": 4,
+      "failed": 0,
+      "evidence": "Built dashboard, actual HTTP report API, collection via Fastify inject and isolated PostgreSQL fixtures",
+      "fixture": "Site timezone and ended-session states are fixture setup; live dashboard test uses seeded historical facts",
+      "page_errors": 0,
+      "horizontal_page_overflow": false
+    }
+  },
+  "screenshots": [
+    "docs/verification/first-day-reporting-desktop.png",
+    "docs/verification/first-day-reporting-mobile.png"
+  ],
+  "environment": "Sandbox loopback EPERM was resolved by running database and browser tests with local connection permissions.",
+  "not_run": [
+    "full_browser_suite",
+    "full_postgres_suite",
+    "sdk_suite",
+    "pglite_suite",
+    "container_suite"
+  ],
+  "existing_site_data_modified": false,
+  "committed": false,
+  "pushed": false,
+  "deployed": false
+}

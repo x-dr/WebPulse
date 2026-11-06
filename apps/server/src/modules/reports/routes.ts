@@ -12,7 +12,7 @@ import { requestBudget, FairGate } from '../../http/budget.js';
 import { ApiError } from '../../http/errors.js';
 import type { AuthService } from '../auth/routes.js';
 import type { Site } from '../sites/store.js';
-import { readCoverage, epochReason } from './coverage.js';
+import { readCoverage, epochReason, observedRange } from './coverage.js';
 import { reportRanges, localParts, wallClock, addDays } from './time.js';
 import { readReport } from './reader.js';
 import { readRankings } from './rankings.js';
@@ -115,6 +115,11 @@ export function registerReports(app: FastifyInstance, pool: pg.Pool, auth: AuthS
                 metric_version: 1,
                 as_of: asOf.toISOString(),
                 start_utc: ranges.current.start.toISOString(),
+                effective_start_utc: observedRange(
+                  coverage,
+                  ranges.current,
+                  site.timezone,
+                ).start.toISOString(),
                 requested_end_utc: ranges.current.requestedEnd.toISOString(),
                 effective_end_utc: ranges.current.end.toISOString(),
                 is_provisional: ranges.current.partial,
@@ -138,6 +143,7 @@ export function registerReports(app: FastifyInstance, pool: pg.Pool, auth: AuthS
                   revision: row.revision,
                 })),
                 comparison: ranges.comparison,
+                unavailable_reasons: {},
               };
               if (kind === 'trend')
                 return {

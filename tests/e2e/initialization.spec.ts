@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { mockDashboard } from './dashboard-fixture.js';
+import { meta, mockDashboard } from './dashboard-fixture.js';
+import type { Visitors } from '../../apps/dashboard/src/api/types.js';
 
 test('login handles failure, keyboard submission and logout without persisting credentials', async ({
   page,
@@ -48,4 +49,30 @@ test('overview renders seven metrics, full duration, accessible chart and error 
   await expect(page.getByText('聚合处理中，请稍后刷新。', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
+});
+
+test('visitor chart distinguishes unavailable classification from a real zero', async ({
+  page,
+}) => {
+  await mockDashboard(page);
+  let visitors: Visitors = {
+    uv: null,
+    new_visitors: null,
+    returning_visitors: null,
+    new_share: null,
+    returning_share: null,
+  };
+  await page.route('**/api/v1/stats/visitors?**', (route) =>
+    route.fulfill({ json: { data: visitors, meta } }),
+  );
+  await page.goto('/visitors');
+  await expect(page.getByRole('img', { name: /本期访客 —/ })).toBeVisible();
+  await expect(page.locator('.visitor-donut circle')).toHaveCount(1);
+  await expect(page.locator('.visitor-donut circle')).toHaveAttribute('stroke', '#e4e8ed');
+  await expect(page.locator('.visitor-stat > strong').first()).toHaveText('—');
+  visitors = { ...visitors, uv: 0, new_visitors: 0, returning_visitors: 0 };
+  await page.getByRole('button', { name: '刷新数据', exact: true }).click();
+  await expect(page.getByRole('img', { name: /本期访客 0/ })).toBeVisible();
+  await expect(page.locator('.visitor-stat > strong').first()).toHaveText('0');
+  await expect(page.locator('.visitor-donut circle')).toHaveCount(1);
 });

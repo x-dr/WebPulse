@@ -26,7 +26,7 @@ test('real SSE replaces snapshots, shares tabs, pauses visibility and restores a
       for (const width of [1440, 1024, 768, 390]) {
         await page.setViewportSize({ width, height: 1000 });
         await page.screenshot({
-          path: `docs/verification/m4-realtime-${width}.png`,
+          path: `docs/verification/ui-realtime-${width}.png`,
           fullPage: true,
         });
         expect(

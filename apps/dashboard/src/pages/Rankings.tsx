@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Button, Input, Pagination, Select } from 'antd';
 import type { Navigate, Scope } from '../navigation';
 import { useReport } from '../api/reports';
@@ -12,11 +12,13 @@ export function RankingsPage({
   url,
   navigate,
   sources = false,
+  toolbar,
 }: {
   scope: Scope;
   url: URL;
   navigate: Navigate;
   sources?: boolean;
+  toolbar: ReactNode;
 }) {
   const [search, setSearch] = useState(url.searchParams.get('search') ?? '');
   const mode = ['view', 'entry', 'exit'].includes(url.searchParams.get('mode') ?? '')
@@ -69,6 +71,7 @@ export function RankingsPage({
           ? '以会话首条页面浏览锁定来源；内部跳转和后续 UTM 不会改写归因。'
           : '受访按 PV；入口按本期开始的会话；退出只计本期开始且已结束的会话。'}
       </p>
+      {toolbar}
       <section className="panel">
         <div className="table-toolbar">
           {sources ? (

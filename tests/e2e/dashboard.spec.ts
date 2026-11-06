@@ -121,28 +121,61 @@ test('retention requires preview and name; deletion cancels, retries with one ke
   expect(keys[0]).toBe(keys[1]);
 });
 
-test('responsive acceptance screenshots and keyboard focus at four widths', async ({
+test('responsive acceptance screenshots and keyboard focus at five widths', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'One viewport sweep is sufficient');
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await mockDashboard(page);
-  for (const width of [1440, 1024, 768, 390]) {
+  for (const width of [1440, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto('/overview?start_date=2026-11-01&end_date=2026-11-03');
     await expect(page.locator('.metric-card')).toHaveCount(7);
     await expect(page.locator('.trend-chart svg')).toBeVisible();
+    await expect(page.locator('.sidebar')).toHaveCSS('background-color', 'rgb(245, 247, 250)');
+    await expect(page.locator('html')).toHaveCSS('background-color', 'rgb(245, 247, 250)');
+    await expect(page.getByRole('navigation', { name: '主要导航' }).getByRole('link')).toHaveCount(
+      6,
+    );
+    await expect(page.getByRole('link', { name: '总览', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(page.getByRole('img', { name: /本期访客 2,549/ })).toBeVisible();
+    if (width === 1440) {
+      const originalURL = page.url();
+      const sidebar = page.locator('.sidebar');
+      await expect(sidebar).toHaveCSS('width', '224px');
+      await page.getByRole('button', { name: '收起侧边栏' }).focus();
+      await page.keyboard.press('Enter');
+      await expect(sidebar).toHaveCSS('width', '80px');
+      await expect(page.getByRole('button', { name: '展开侧边栏' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      await page.getByRole('button', { name: '展开侧边栏' }).click();
+      await expect(sidebar).toHaveCSS('width', '224px');
+      expect(page.url()).toBe(originalURL);
+      await page.getByRole('heading', { name: '流量总览' }).click();
+    }
+    if (width === 390) {
+      const navigation = await page.locator('.sidebar').boundingBox();
+      expect(navigation?.y).toBeGreaterThanOrEqual(900);
+      expect(navigation!.y + navigation!.height).toBe(1000);
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await page.screenshot({ path: `docs/verification/m3-overview-${width}.png`, fullPage: true });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: `docs/verification/ui-overview-${width}.png`, fullPage: true });
     await page.getByRole('link', { name: '站点设置', exact: true }).click();
     await expect(page.getByRole('heading', { name: '站点设置', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await page.screenshot({ path: `docs/verification/m3-settings-${width}.png`, fullPage: true });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: `docs/verification/ui-settings-${width}.png`, fullPage: true });
   }
   await page.getByRole('button', { name: '删除站点', exact: true }).click();
   await page.keyboard.press('Tab');

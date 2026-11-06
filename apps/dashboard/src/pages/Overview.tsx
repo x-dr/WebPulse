@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { Button, Select } from 'antd';
 import { useReport } from '../api/reports';
 import type { Overview as OverviewData, Ranking, Trend, Visitors } from '../api/types';
@@ -9,6 +9,7 @@ const TrendChart = lazy(() =>
   import('../components/TrendChart').then((module) => ({ default: module.TrendChart })),
 );
 import { RankingTable } from '../components/RankingTable';
+import { WorkspaceIcon } from '../components/WorkspaceIcon';
 
 export function TrendPanel({
   scope,
@@ -92,7 +93,7 @@ function TopRanking({
             navigate(kind === 'sources' ? '/sources' : `/pages?mode=${mode ?? 'view'}`)
           }
         >
-          详情 →<span className="sr-only">{title}</span>
+          查看全部 →<span className="sr-only">{title}</span>
         </Button>
       </div>
       {query.isError ? (
@@ -109,18 +110,36 @@ function TopRanking({
     </section>
   );
 }
-export function OverviewPage({ scope, navigate }: { scope: Scope; navigate: Navigate }) {
+export function OverviewPage({
+  scope,
+  navigate,
+  toolbar,
+}: {
+  scope: Scope;
+  navigate: Navigate;
+  toolbar: ReactNode;
+}) {
   const overview = useReport<OverviewData>('overview', scope);
   const visitors = useReport<Visitors>('visitors', scope);
   return (
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">每一次访问，都有迹可循</p>
+          <p className="eyebrow">WEBSITE ANALYTICS</p>
           <h1>流量总览</h1>
+          <p className="page-description">每一次访问，都有迹可循</p>
         </div>
-        <span className="muted">{scope.site.name} / 网站脉搏</span>
+        <a
+          className="site-domain"
+          href={scope.site.primary_origin}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {scope.site.primary_origin.replace(/^https?:\/\//, '')}
+          <WorkspaceIcon name="external" />
+        </a>
       </div>
+      {toolbar}
       {overview.isError ? (
         <Failure error={overview.error} retry={() => void overview.refetch()} />
       ) : overview.data ? (

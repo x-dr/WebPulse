@@ -1,5 +1,6 @@
 import type pg from 'pg';
 import type { Site } from '../sites/store.js';
+import { localParts, type TimeRange } from './time.js';
 
 export type CoverageRow = {
   layer: string;
@@ -13,6 +14,17 @@ export type Coverage = {
   rows: CoverageRow[];
   gaps: { layer: string; start_utc: Date; end_utc: Date; reason: string }[];
 };
+// A site's first natural day starts when collection became possible. Earlier
+// dates remain unavailable rather than becoming fabricated zero-traffic days.
+export function observedRange(coverage: Coverage, range: TimeRange, zone: string): TimeRange {
+  const observed = coverage.rows.find((row) => row.layer === 'raw_pv')?.observed_from;
+  return observed &&
+    observed > range.start &&
+    observed < range.end &&
+    localParts(observed, zone).date === localParts(range.start, zone).date
+    ? { ...range, start: observed }
+    : range;
+}
 export async function readCoverage(client: pg.PoolClient, site: Site): Promise<Coverage> {
   return {
     rows: (

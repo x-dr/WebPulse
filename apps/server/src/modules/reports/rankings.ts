@@ -2,7 +2,7 @@ import type pg from 'pg';
 import type { Site } from '../sites/store.js';
 import { safeCount } from '../aggregation/facts.js';
 import { daySlices, type TimeRange } from './time.js';
-import { unavailable, type Coverage } from './coverage.js';
+import { unavailable, observedRange, type Coverage } from './coverage.js';
 
 export type RankingOptions = {
   mode: 'view' | 'entry' | 'exit';
@@ -25,6 +25,7 @@ export async function readRankings(
   coverage: Coverage,
   options: RankingOptions,
 ) {
+  range = observedRange(coverage, range, site.timezone);
   const session = options.sources || options.mode !== 'view';
   const slices = daySlices(range, site.timezone);
   const finalDates = (

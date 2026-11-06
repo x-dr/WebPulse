@@ -8,7 +8,7 @@ import {
 import type { Site } from '../sites/store.js';
 import { safeCount, pvFacts, sessionFacts } from '../aggregation/facts.js';
 import { daySlices, type TimeRange } from './time.js';
-import { unavailable, epochReason, type Coverage } from './coverage.js';
+import { unavailable, epochReason, observedRange, type Coverage } from './coverage.js';
 
 export async function readReport(
   client: pg.PoolClient,
@@ -16,6 +16,7 @@ export async function readReport(
   range: TimeRange,
   coverage: Coverage,
 ) {
+  range = observedRange(coverage, range, site.timezone);
   const data = Object.fromEntries(reportMetrics.map((m) => [m, 0])) as ReportValues;
   const reasons: UnavailableReasons = {};
   const slices = daySlices(range, site.timezone);

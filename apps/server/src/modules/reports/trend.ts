@@ -3,7 +3,7 @@ import { closedSessionMetrics, type ReportMetric } from '@webpulse/shared';
 import type { Site } from '../sites/store.js';
 import { ApiError } from '../../http/errors.js';
 import { safeCount } from '../aggregation/facts.js';
-import { unavailable, epochReason, type Coverage } from './coverage.js';
+import { unavailable, epochReason, observedRange, type Coverage } from './coverage.js';
 import { addDays, localParts, wallClock, type TimeRange } from './time.js';
 import { readReport } from './reader.js';
 
@@ -28,6 +28,7 @@ export async function readTrend(
   grain: 'minute' | 'hour' | 'day',
   metric: ReportMetric,
 ) {
+  range = observedRange(coverage, range, site.timezone);
   const seconds = grain === 'hour' ? 3600 : 60;
   if (
     grain !== 'day' &&
@@ -99,21 +100,22 @@ export async function readTrend(
         ? wallClock(addDays(date, 1), site.timezone).at
         : new Date(aligned + seconds * 1000);
     const end = new Date(Math.min(next.getTime(), range.end.getTime()));
-    const complete = cursor.getTime() === aligned && end.getTime() === next.getTime();
+    const start = observedRange(coverage, { ...range, start: cursor, end }, site.timezone).start;
+    const complete = start.getTime() === aligned && end.getTime() === next.getTime();
     const stored = published.get(grain === 'day' ? date : aligned);
     let value: number | null = null;
     let reason: string | undefined;
     if (grain === 'day') {
       reason =
-        unavailable(coverage, 'day_aggregates', cursor, end) ??
-        (member ? epochReason(site, cursor, end) : undefined);
+        unavailable(coverage, 'day_aggregates', start, end) ??
+        (member ? epochReason(site, start, end) : undefined);
       if (complete && stored && !reason && !['new_visitors', 'returning_visitors'].includes(metric))
         value = scalar(stored, metric);
       else {
         const result = await readReport(
           client,
           site,
-          { ...range, start: cursor, end, partial: false },
+          { ...range, start, end, partial: false },
           coverage,
         );
         value = result.data[metric];
@@ -133,8 +135,8 @@ export async function readTrend(
             ? 'raw_pv'
             : 'sessions';
       reason =
-        unavailable(coverage, layer, cursor, end) ??
-        (member ? epochReason(site, cursor, end) : undefined);
+        unavailable(coverage, layer, start, end) ??
+        (member ? epochReason(site, start, end) : undefined);
       if (!reason) {
         const row =
           complete && grain === 'hour' && member
@@ -157,7 +159,7 @@ export async function readTrend(
       }
     }
     points.push({
-      start: cursor.toISOString(),
+      start: start.toISOString(),
       end: end.toISOString(),
       value,
       complete,

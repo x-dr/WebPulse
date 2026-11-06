@@ -53,6 +53,8 @@ test('built dashboard logs in and reads/modifies real HTTP API and isolated Post
     ).toHaveText('50.0%');
     await expect(page.getByText('60分33秒', { exact: true })).toBeVisible();
     await expect(page.getByText('占比 50.0%', { exact: true })).toHaveCount(2);
+    await expect(page.locator('.trend-chart svg')).toBeVisible();
+    await expect(page.getByText('服务返回的数据格式无效，请重试。')).toHaveCount(0);
     await page.getByRole('link', { name: '页面', exact: true }).click();
     await expect(page.getByText('/guide/install', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: '退出', exact: true }).click();

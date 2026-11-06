@@ -58,11 +58,17 @@ export function RankingTable({
                   </span>
                   <div className="rank-content">
                     {detail ? (
-                      <button className="text-button rank-path" onClick={() => detail(item)}>
+                      <button
+                        className="text-button rank-path"
+                        title={sources ? sourceName(item) : item.path}
+                        onClick={() => detail(item)}
+                      >
                         {sources ? sourceName(item) : item.path}
                       </button>
                     ) : (
-                      <span className="rank-path">{sources ? sourceName(item) : item.path}</span>
+                      <span className="rank-path" title={sources ? sourceName(item) : item.path}>
+                        {sources ? sourceName(item) : item.path}
+                      </span>
                     )}
                     {sources && (
                       <span className="muted small">

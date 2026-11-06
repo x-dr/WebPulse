@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useReport } from '../api/reports';
 import type { Visitors } from '../api/types';
 import type { Scope } from '../navigation';
@@ -5,7 +6,7 @@ import { Failure, Loading } from '../components/Feedback';
 import { ReportStatus, VisitorCards } from '../components/ReportCards';
 import { TrendPanel } from './Overview';
 
-export function VisitorsPage({ scope }: { scope: Scope }) {
+export function VisitorsPage({ scope, toolbar }: { scope: Scope; toolbar: ReactNode }) {
   const query = useReport<Visitors>('visitors', scope);
   return (
     <>
@@ -18,6 +19,7 @@ export function VisitorsPage({ scope }: { scope: Scope }) {
       <p className="page-description">
         按整个所选周期划分新老访客。UV 按浏览器身份去重，不代表实名人数，不合并跨设备身份。
       </p>
+      {toolbar}
       {query.isError ? (
         <Failure error={query.error} retry={() => void query.refetch()} />
       ) : query.data ? (
