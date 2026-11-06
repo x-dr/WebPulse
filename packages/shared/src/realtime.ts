@@ -5,5 +5,5 @@ export type RealtimeSnapshot = {
   pv_last_minute: number;
   minutes: { start: string; pv: number }[];
   active_pages: { path: string; visitors: number }[];
-  recent_pages: { path: string; at: string; channel: string }[];
+  recent_pages: { path: string; at: string; channel: string; client_ip: string | null }[];
 };

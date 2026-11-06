@@ -33,6 +33,7 @@ describe('migration lifecycle on PGlite (not real PostgreSQL concurrency)', () =
     expect(await migrate(connection, migrations)).toEqual([
       '003_reporting.sql',
       '004_deployment.sql',
+      '005_visit_ip.sql',
     ]);
     expect((await database.query('SELECT public_id FROM sites')).rows).toEqual([
       { public_id: 'site_upgrade' },

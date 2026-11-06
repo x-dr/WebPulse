@@ -5,6 +5,7 @@ import type { Scope } from '../navigation';
 import { Failure, Loading } from '../components/Feedback';
 import { ReportStatus, VisitorCards } from '../components/ReportCards';
 import { TrendPanel } from './Overview';
+import { VisitRecords } from './VisitRecords';
 
 export function VisitorsPage({ scope, toolbar }: { scope: Scope; toolbar: ReactNode }) {
   const query = useReport<Visitors>('visitors', scope);
@@ -31,6 +32,7 @@ export function VisitorsPage({ scope, toolbar }: { scope: Scope; toolbar: ReactN
         <Loading />
       )}
       <TrendPanel scope={scope} visitorOnly />
+      <VisitRecords key={`${scope.site.site_id}:${scope.start}:${scope.end}`} scope={scope} />
     </>
   );
 }

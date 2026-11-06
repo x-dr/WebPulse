@@ -20,9 +20,9 @@ async function insertEvent(
   seq: string,
 ) {
   await ctx.client.query(
-    `INSERT INTO events(site_id,event_id,session_id,visitor_key,ip_key,event_type,page_view_id,path,occurred_at,received_at,local_date,payload_fingerprint,rule_version,activity_seq,key_version,first_seen_pv_at,origin,interaction_kind,reason)
+    `INSERT INTO events(site_id,event_id,session_id,visitor_key,ip_key,event_type,page_view_id,path,occurred_at,received_at,local_date,payload_fingerprint,rule_version,activity_seq,key_version,first_seen_pv_at,origin,interaction_kind,reason,client_ip)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9,($9::timestamptz AT TIME ZONE $10)::date,$11,$12,$13,$14,
-      (SELECT first_seen_pv_at FROM visitors WHERE site_id=$1 AND visitor_key=$4),$15,$16,$17)`,
+      (SELECT first_seen_pv_at FROM visitors WHERE site_id=$1 AND visitor_key=$4),$15,$16,$17,$18)`,
     [
       ctx.site.id,
       event.event_id,
@@ -41,6 +41,7 @@ async function insertEvent(
       event.type === 'page_view' ? event.page.origin : '',
       event.type === 'interaction' ? event.interaction_kind : null,
       event.type === 'page_view' ? event.reason : null,
+      ctx.clientIp,
     ],
   );
 }

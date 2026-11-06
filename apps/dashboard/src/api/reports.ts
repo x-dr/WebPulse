@@ -6,6 +6,22 @@ import type { Scope } from '../navigation';
 const scalar = (value: unknown) =>
   value === null || (typeof value === 'number' && Number.isFinite(value));
 function validData(kind: string, data: Record<string, unknown>) {
+  if (kind === 'visits')
+    return (
+      scalar(data.total_items) &&
+      typeof data.page === 'number' &&
+      typeof data.page_size === 'number' &&
+      Array.isArray(data.items) &&
+      data.items.every(
+        (p: unknown) =>
+          isObject(p) &&
+          typeof p.event_id === 'string' &&
+          typeof p.path === 'string' &&
+          typeof p.at === 'string' &&
+          typeof p.channel === 'string' &&
+          (p.client_ip === null || typeof p.client_ip === 'string'),
+      )
+    );
   if (kind === 'trend')
     return (
       Array.isArray(data.points) &&

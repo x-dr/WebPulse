@@ -19,17 +19,20 @@ const interaction = (page: string): CollectionEvent => ({
 });
 
 describe('M1 collection on real PostgreSQL', () => {
-  it('persists cleaned facts and membership without raw URL, cid, IP or UA', async () => {
+  it('persists the canonical request IP with cleaned facts without raw URL or cid', async () => {
     const event = f.pv('/product/123?token=never-save-this#private');
     if (event.type === 'page_view') event.referrer = 'https://google.com/private?secret=x';
     const response = await f.collect([event], { remoteAddress: '192.0.2.1' });
     expect(response.statusCode, response.body).toBe(204);
     const dump = JSON.stringify(await f.snapshot());
-    for (const secret of ['never-save-this', '/product/123', f.cid, '192.0.2.1', '?secret'])
+    for (const secret of ['never-save-this', '/product/123', f.cid, '?secret'])
       expect(dump).not.toContain(secret);
-    const row = (await f.pool.query('SELECT path,occurred_at=received_at AS same FROM events'))
-      .rows[0];
-    expect(row).toEqual({ path: '/product/:id', same: true });
+    const row = (
+      await f.pool.query(
+        'SELECT path,occurred_at=received_at AS same,host(client_ip) AS ip FROM events',
+      )
+    ).rows[0];
+    expect(row).toEqual({ path: '/product/:id', same: true, ip: '192.0.2.1' });
     expect((await f.pool.query('SELECT page_views,source_channel FROM sessions')).rows).toEqual([
       { page_views: 1, source_channel: 'organic' },
     ]);

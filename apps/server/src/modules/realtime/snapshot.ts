@@ -44,8 +44,8 @@ export async function readRealtime(
     )
   ).rows;
   const recent = (
-    await client.query<{ path: string; at: Date; channel: string }>(
-      `SELECT e.path,e.occurred_at AS at,s.source_channel AS channel FROM events e JOIN sessions s ON s.site_id=e.site_id AND s.id=e.session_id WHERE e.site_id=$1 AND e.event_type='page_view' AND e.occurred_at>$2::timestamptz-interval '15 minutes' AND e.occurred_at<=$2 ORDER BY e.occurred_at DESC,e.activity_seq DESC LIMIT 20`,
+    await client.query<{ path: string; at: Date; channel: string; client_ip: string | null }>(
+      `SELECT e.path,e.occurred_at AS at,s.source_channel AS channel,host(e.client_ip) AS client_ip FROM events e JOIN sessions s ON s.site_id=e.site_id AND s.id=e.session_id WHERE e.site_id=$1 AND e.event_type='page_view' AND e.occurred_at>$2::timestamptz-interval '15 minutes' AND e.occurred_at<=$2 ORDER BY e.occurred_at DESC,e.activity_seq DESC,e.event_id DESC LIMIT 20`,
       [site.id, now],
     )
   ).rows;

@@ -179,67 +179,82 @@ export async function mockDashboard(
           }
         : meta;
       const data =
-        kind === 'overview'
+        kind === 'visits'
           ? {
-              ...overview,
-              ...(state.unavailable ? { uv: null } : {}),
-              ...(url.searchParams.get('site_id') === 'site_second_test' ? { pv: 7 } : {}),
+              page: 1,
+              page_size: 20,
+              total_items: 1,
+              items: [
+                {
+                  event_id: '22222222-2222-4222-8222-222222222222',
+                  path: '/guide',
+                  at: '2026-11-05T09:00:00Z',
+                  channel: 'direct',
+                  client_ip: '192.0.2.12',
+                },
+              ],
             }
-          : kind === 'visitors'
+          : kind === 'overview'
             ? {
-                uv: 2549,
-                new_visitors: 1233,
-                returning_visitors: 1316,
-                new_share: 1233 / 2549,
-                returning_share: 1316 / 2549,
+                ...overview,
+                ...(state.unavailable ? { uv: null } : {}),
+                ...(url.searchParams.get('site_id') === 'site_second_test' ? { pv: 7 } : {}),
               }
-            : kind === 'trend'
+            : kind === 'visitors'
               ? {
-                  metric: url.searchParams.get('metric'),
-                  granularity: url.searchParams.get('granularity'),
-                  points: [500, 740, null, 350, 1800, 2200, 1500, 3000].map((value, i) => ({
-                    start: new Date(Date.UTC(2026, 10, 5, i)).toISOString(),
-                    end: new Date(Date.UTC(2026, 10, 5, i + 1)).toISOString(),
-                    value,
-                    complete: true,
-                    ...(value === null ? { reason: 'aggregation_pending' } : {}),
-                  })),
+                  uv: 2549,
+                  new_visitors: 1233,
+                  returning_visitors: 1316,
+                  new_share: 1233 / 2549,
+                  returning_share: 1316 / 2549,
                 }
-              : {
-                  unit:
-                    kind === 'sources' || (url.searchParams.get('mode') ?? 'view') !== 'view'
-                      ? 'session'
-                      : 'page_view',
-                  total: state.unavailable ? null : 4000,
-                  page: Number(url.searchParams.get('page') ?? 1),
-                  page_size: Number(url.searchParams.get('page_size') ?? 20),
-                  total_items: 42,
-                  other_count: 1000,
-                  items: state.unavailable
-                    ? []
-                    : kind === 'sources'
-                      ? ['direct', 'organic', 'referral', 'campaign', 'unknown'].map(
-                          (channel, i) => ({
-                            channel,
-                            referrer_host: i > 1 ? 'github.com' : '',
-                            utm_source: i === 3 ? 'newsletter' : '',
-                            utm_medium: '',
-                            utm_campaign: '',
+              : kind === 'trend'
+                ? {
+                    metric: url.searchParams.get('metric'),
+                    granularity: url.searchParams.get('granularity'),
+                    points: [500, 740, null, 350, 1800, 2200, 1500, 3000].map((value, i) => ({
+                      start: new Date(Date.UTC(2026, 10, 5, i)).toISOString(),
+                      end: new Date(Date.UTC(2026, 10, 5, i + 1)).toISOString(),
+                      value,
+                      complete: true,
+                      ...(value === null ? { reason: 'aggregation_pending' } : {}),
+                    })),
+                  }
+                : {
+                    unit:
+                      kind === 'sources' || (url.searchParams.get('mode') ?? 'view') !== 'view'
+                        ? 'session'
+                        : 'page_view',
+                    total: state.unavailable ? null : 4000,
+                    page: Number(url.searchParams.get('page') ?? 1),
+                    page_size: Number(url.searchParams.get('page_size') ?? 20),
+                    total_items: 42,
+                    other_count: 1000,
+                    items: state.unavailable
+                      ? []
+                      : kind === 'sources'
+                        ? ['direct', 'organic', 'referral', 'campaign', 'unknown'].map(
+                            (channel, i) => ({
+                              channel,
+                              referrer_host: i > 1 ? 'github.com' : '',
+                              utm_source: i === 3 ? 'newsletter' : '',
+                              utm_medium: '',
+                              utm_campaign: '',
+                              count: 1000 - i * 100,
+                              share: (1000 - i * 100) / 4000,
+                            }),
+                          )
+                        : [
+                            '/',
+                            '/guide',
+                            '/guide/installation',
+                            '/docs/' + 'very-long-path/'.repeat(12),
+                          ].map((path, i) => ({
+                            path,
                             count: 1000 - i * 100,
                             share: (1000 - i * 100) / 4000,
-                          }),
-                        )
-                      : [
-                          '/',
-                          '/guide',
-                          '/guide/installation',
-                          '/docs/' + 'very-long-path/'.repeat(12),
-                        ].map((path, i) => ({
-                          path,
-                          count: 1000 - i * 100,
-                          share: (1000 - i * 100) / 4000,
-                        })),
-                };
+                          })),
+                  };
       return route.fulfill({ json: { data, meta: unavailable } });
     }
     return fail('NOT_FOUND', 404);

@@ -112,6 +112,9 @@ describe('M2 journal-gated deletion, recovery and reconciliation', () => {
   });
   it('deletes precise visitor epochs, replaces ranks and preserves another visitor sharing an IP', async () => {
     await sample();
+    await f.pool.query(
+      "UPDATE events SET client_ip=CASE WHEN path='/a' THEN '192.0.2.1'::inet ELSE '192.0.2.2'::inet END",
+    );
     await seed(f, [
       {
         visitor: 'a-epoch2',
@@ -147,6 +150,9 @@ describe('M2 journal-gated deletion, recovery and reconciliation', () => {
       ),
     );
     await runUntilDone();
+    expect((await f.pool.query('SELECT host(client_ip) AS ip FROM events')).rows).toEqual([
+      { ip: '192.0.2.2' },
+    ]);
     expect((await f.pool.query('SELECT path FROM stats_pages_daily')).rows).toEqual([
       { path: '/b' },
     ]);

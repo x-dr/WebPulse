@@ -17,6 +17,7 @@ import { reportRanges, localParts, wallClock, addDays } from './time.js';
 import { readReport } from './reader.js';
 import { readRankings } from './rankings.js';
 import { readTrend } from './trend.js';
+import { readVisits } from './visits.js';
 
 type Query = ReportQuery & {
   granularity?: 'minute' | 'hour' | 'day';
@@ -51,23 +52,33 @@ const extra = {
 };
 export function registerReports(app: FastifyInstance, pool: pg.Pool, auth: AuthService) {
   const gate = new FairGate(2, 1, 16, 8);
-  for (const kind of ['overview', 'visitors', 'trend', 'sources', 'pages', 'entries'] as const) {
+  for (const kind of [
+    'overview',
+    'visitors',
+    'visits',
+    'trend',
+    'sources',
+    'pages',
+    'entries',
+  ] as const) {
     const keys =
-      kind === 'trend'
-        ? ['granularity', 'metric']
-        : ['sources', 'pages', 'entries'].includes(kind)
-          ? [
-              'page',
-              'page_size',
-              'sort',
-              'order',
-              ...(kind === 'sources'
-                ? ['channel', 'referrer_host', 'utm_source', 'utm_medium', 'utm_campaign']
-                : kind === 'pages'
-                  ? ['mode', 'search']
-                  : ['search']),
-            ]
-          : [];
+      kind === 'visits'
+        ? ['page', 'page_size']
+        : kind === 'trend'
+          ? ['granularity', 'metric']
+          : ['sources', 'pages', 'entries'].includes(kind)
+            ? [
+                'page',
+                'page_size',
+                'sort',
+                'order',
+                ...(kind === 'sources'
+                  ? ['channel', 'referrer_host', 'utm_source', 'utm_medium', 'utm_campaign']
+                  : kind === 'pages'
+                    ? ['mode', 'search']
+                    : ['search']),
+              ]
+            : [];
     const querystring = {
       ...ReportQuerySchema,
       properties: {
@@ -145,6 +156,23 @@ export function registerReports(app: FastifyInstance, pool: pg.Pool, auth: AuthS
                 comparison: ranges.comparison,
                 unavailable_reasons: {},
               };
+              if (kind === 'visits') {
+                const result = await readVisits(
+                  client,
+                  site,
+                  ranges.current,
+                  coverage,
+                  Number(request.query.page ?? 1),
+                  Number(request.query.page_size ?? 20),
+                );
+                return {
+                  data: result.data,
+                  meta: {
+                    ...meta,
+                    unavailable_reasons: result.reason ? { visits: result.reason } : {},
+                  },
+                };
+              }
               if (kind === 'trend')
                 return {
                   data: await readTrend(

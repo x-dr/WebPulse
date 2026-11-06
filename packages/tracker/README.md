@@ -42,6 +42,8 @@ M1 已实现无框架浏览器 SDK。构建 `pnpm --filter @webpulse/tracker bui
 
 SDK 与服务端共享清洗实现：剥离 query/fragment、默认脱敏邮箱/数字/UUID/长标识、排除认证回调等路径；referrer 只发送域名；UTM 默认关闭。未脱敏导航 identity 仅在同意后的内存参与判重，队列只保存清洗后的字段。
 
+服务端在接纳事件时记录请求的规范化真实 IP，供已登录管理员在访客分析和实时页面查看。IP 由服务端可信代理链解析，SDK 不上传 IP 字段；原始 IP 随事件明细保留及删除，默认保留 30 日。站点的采集说明应包含这一数据项。
+
 点击/按键须可信；滚动须关联最近 1 秒可信 wheel/touchmove。每页最多一次互动，PV 收到 204 后才发送。可见时每 15 秒心跳，发送累计可见毫秒数；服务端按短区间并集合并多标签估计，不把心跳视为互动。
 
 事件最多 20 条/16KiB，2 秒冲刷；内存最多 100 条/2 分钟。429/503/网络失败最多重试 3 次，遵守 Retry-After 并复用 ID；互动单独发送，防止过期错误归到其他页。过期互动丢弃，resume 新 PV 不继承旧互动。fetch 显式使用 `referrerPolicy=no-referrer`；离开时仅在页面 Referrer Policy 明确不传路径时使用 Beacon，否则改用 keepalive fetch，防止 HTTP Referer 附带敏感地址。Beacon 的 true 仅代表浏览器接受排队，不等于服务器已确认；恢复后可用原 ID 获取确认。

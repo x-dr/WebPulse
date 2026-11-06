@@ -52,6 +52,7 @@ describe('M2 retention coverage and resumable cleanup', () => {
       },
     ]);
     await ready();
+    await f.pool.query("UPDATE events SET client_ip='192.0.2.3'");
     await maintained(f, (c) => cleanupSite(c, f.site, 1));
     expect((await f.pool.query('SELECT count(*)::int AS count FROM events')).rows[0].count).toBe(1);
     expect(

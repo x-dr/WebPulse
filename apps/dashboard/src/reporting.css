@@ -427,13 +427,25 @@ table th:first-child {
   font-size: 12px;
 }
 .realtime-recent table {
-  min-width: 340px;
+  min-width: 660px;
 }
 .realtime-recent th:first-child {
-  width: 42%;
+  width: 30%;
 }
 .realtime-recent td,
 .realtime-recent thead th {
   white-space: nowrap;
   overflow-wrap: normal;
+}
+.visit-records table {
+  min-width: 720px;
+}
+.visit-records th:first-child {
+  width: 28%;
+}
+.visit-ip {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }

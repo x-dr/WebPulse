@@ -122,14 +122,15 @@ export function RealtimePage({ site }: { site: Site }) {
           <section className="panel realtime-recent">
             <div className="panel-heading">
               <h2>最近页面</h2>
-              <p>只显示脱敏路径、来源分类与访问时间。</p>
+              <p>显示最近 20 次访问的页面、真实 IP、来源与时间。</p>
             </div>
-            <div className="table-wrap">
+            <div className="table-wrap" role="region" aria-label="最近页面表格" tabIndex={0}>
               <table>
                 <caption className="sr-only">最近页面浏览</caption>
                 <thead>
                   <tr>
                     <th scope="col">页面</th>
+                    <th scope="col">真实 IP</th>
                     <th scope="col">来源</th>
                     <th scope="col">访问时间</th>
                   </tr>
@@ -140,6 +141,9 @@ export function RealtimePage({ site }: { site: Site }) {
                       <th scope="row" className="path-cell">
                         {p.path}
                       </th>
+                      <td>
+                        <span className="visit-ip">{p.client_ip ?? '未记录'}</span>
+                      </td>
                       <td>{channels[p.channel] ?? '未知'}</td>
                       <td>{time(p.at)}</td>
                     </tr>

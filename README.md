@@ -130,3 +130,11 @@ pnpm dev
 M1 管理 API 使用 `/api/v1/auth/login`、`GET /auth/session`、`POST /auth/logout`、`GET/POST /sites`、`GET/PATCH /sites/:site_id`。写请求必须带精确 `Origin`、管理 cookie 和登录返回的 `X-CSRF-Token`。站点创建字段、PATCH 白名单及采集请求示例见 [M1 文档](docs/M1采集链路与验收.md)和 [设计契约](design/WebPulse-项目技术文档.md#113-登录与站点)。
 
 开发环境默认 `trustProxy=false`，使用 socket 地址生成站点化 IP HMAC。生产 Compose 只信任固定 Nginx 地址，由 Nginx 覆盖 forwarded 头。保留策略通过独立预览/确认接口变更，清理不越过实际连续冻结水位；扩大窗口不会恢复已清理数据。本地可选 `DELETION_ENCRYPTION_KEY_FILE`，缺少独立 journal 时仍停在确认阶段；生产使用分离的 RSA 公私钥、HTTPS journal 和独立 worker。恢复须完成全清单重放与隐私校验，不能直接开放旧备份。M4 验收只操作测试卷/随机 schema，未迁移默认开发 schema 或删除既有站点数据。
+
+## 真实 IP 访问记录
+
+执行 `pnpm db:migrate` 应用 `005_visit_ip.sql` 并重启 API/后台后，新接纳的访问事件会将规范化的 IPv4/IPv6 写入 `events.client_ip`。后台「访客分析 → 访问记录」按站点及日期分页查看；「实时访问 → 最近页面」展示最近 15 分钟内的 20 条访问及 IP。历史 HMAC 无法还原原始 IP，旧记录显示“未记录”。独立 IP 指标仍使用原有 HMAC 去重。
+
+原始 IP 随事件明细保留（默认 30 日，可配置 7–30 日），随站点/访客删除任务清除，也会包含在数据库备份中。SDK 仍要求同意并遵守 GPC/DNT；采集接口不接受客户端提交 IP 字段。访问日志继续使用现有最小字段。
+
+有反向代理时，将 API 的 `TRUSTED_PROXY_CIDRS` 设置为实际代理的固定 IP/CIDR，并确保最外层受信任入口覆写转发头。默认仅使用 socket 地址，不信任任意 `X-Forwarded-For` 或 `X-Real-IP`；若代理未配置可信链，保存的会是代理地址。生产 Compose 的 Nginx 直连公网配置已覆盖转发头；CDN/额外代理需要按实际链路配置。

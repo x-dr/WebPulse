@@ -31,7 +31,8 @@ function valid(value: unknown, site: string): value is RealtimeSnapshot {
         isObject(r) &&
         typeof r.path === 'string' &&
         typeof r.at === 'string' &&
-        typeof r.channel === 'string',
+        typeof r.channel === 'string' &&
+        (r.client_ip === null || typeof r.client_ip === 'string'),
     )
   );
 }

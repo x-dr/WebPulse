@@ -7,7 +7,7 @@ import { hashPassword } from '../../apps/server/src/modules/auth/password.js';
 import { defaultRules, type CollectionEvent } from '../../packages/shared/src/index.js';
 
 loadWorkspaceEnv();
-export async function fixture() {
+export async function fixture(options: { trustedProxy?: string[] } = {}) {
   const config = readConfig();
   const schema = `webpulse_m1_${randomUUID().replaceAll('-', '')}`;
   const admin = createPool(config.database);
@@ -23,7 +23,7 @@ export async function fixture() {
     csrfKey: randomBytes(32),
   };
   const deletionKey = { key: randomBytes(32), keyId: 'test-v1' };
-  const app = buildApp({ ready: async () => {}, pool, security, deletionKey });
+  const app = buildApp({ ready: async () => {}, pool, security, deletionKey, ...options });
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
     const client = await pool.connect();

@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-06",
+  "scope": "Persist canonical request IPs with accepted events and show authenticated visit records",
+  "local_only": true,
+  "migration": "005_visit_ip.sql",
+  "existing_database_migrated": false,
+  "production_deployed": false,
+  "checks": {
+    "unit": { "passed": 64 },
+    "pglite": { "passed": 10 },
+    "postgres": {
+      "passed": 49,
+      "isolation": "Random test-owned schemas, removed after tests",
+      "files": [
+        "visit-ip.test.ts",
+        "collection.test.ts",
+        "migrations.test.ts",
+        "reporting.test.ts",
+        "reporting-observation.test.ts",
+        "realtime.test.ts",
+        "deletion.test.ts",
+        "retention.test.ts"
+      ],
+      "initial_attempt": "Sandbox denied local TCP with EPERM; rerun with local connection permission passed"
+    },
+    "browser": {
+      "passed": 14,
+      "projects": ["desktop 1440x1000", "mobile 390x844"],
+      "files": ["visit-ip.spec.ts", "dashboard.spec.ts", "live-dashboard.spec.ts"],
+      "excluded": "Existing responsive acceptance screenshots test",
+      "real_http_and_postgres": "visit-ip.spec.ts and live-dashboard.spec.ts use random PostgreSQL schemas",
+      "assertions": [
+        "Stored IPv4 and full IPv6 are shown in visitor records and realtime snapshots",
+        "Legacy null IP displays as not recorded",
+        "21 visits paginate into 20 and 1 records",
+        "Visit records table is keyboard focusable",
+        "Long IPv6 text wraps without overflowing its cell",
+        "No full-page horizontal overflow or page errors",
+        "Existing dashboard interactions and authenticated live API remain functional"
+      ]
+    },
+    "typecheck": "passed",
+    "lint": "passed",
+    "antd_lint": "0 issues for VisitRecords.tsx and Realtime.tsx",
+    "build": "passed; final dashboard build includes IPv6 wrapping fix",
+    "changed_file_format": "passed",
+    "git_diff_check": "passed"
+  },
+  "behavior": {
+    "trusted_proxy": "Only configured proxy addresses can supply forwarding headers",
+    "ip_statistics": "Existing HMAC distinct members remain unchanged",
+    "retention": "Raw IP follows the existing 7-30 day event retention and deletion lifecycle",
+    "logs": "Existing minimal access-log format retained"
+  },
+  "not_run": [
+    "SDK browser suite",
+    "Production container rebuild",
+    "VPS deployment",
+    "Actual public/CDN proxy-chain verification"
+  ],
+  "screenshots": [
+    "visit-ip-visitors-desktop.png",
+    "visit-ip-visitors-mobile.png",
+    "visit-ip-realtime-desktop.png",
+    "visit-ip-realtime-mobile.png"
+  ]
+}

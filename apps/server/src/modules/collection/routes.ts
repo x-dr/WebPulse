@@ -29,7 +29,8 @@ export function registerCollection(app: FastifyInstance, pool: pg.Pool, security
     if (request.headers['sec-gpc'] === '1' || request.headers.dnt === '1')
       throw new ApiError(403, 'privacy_opt_out');
     const siteId = body.site_id;
-    const ip = identityKey(security.ipKey, 'ip', siteId, 1, canonicalIp(request.ip));
+    const clientIp = canonicalIp(request.ip);
+    const ip = identityKey(security.ipKey, 'ip', siteId, 1, clientIp);
     const rateKey = identityKey(security.visitorKey, 'rate', siteId, 1, body.cid).toString('hex');
     limits.take(`site:${siteId}`, 60, 60);
     limits.take(`events:${siteId}`, 600, 600, 'events' in body ? body.events.length : 1);
@@ -62,13 +63,8 @@ export function registerCollection(app: FastifyInstance, pool: pg.Pool, security
           client,
           site,
           key,
-          ipKey: identityKey(
-            security.ipKey,
-            'ip',
-            siteId,
-            site.key_version,
-            canonicalIp(request.ip),
-          ),
+          ipKey: identityKey(security.ipKey, 'ip', siteId, site.key_version, clientIp),
+          clientIp,
           now,
           visitor,
           rules,

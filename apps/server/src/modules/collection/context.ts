@@ -10,6 +10,7 @@ export type CollectionContext = {
   site: Site;
   key: Buffer;
   ipKey: Buffer;
+  clientIp: string | null;
   now: string;
   rules: CollectionRules;
   visitor: Visitor | undefined;

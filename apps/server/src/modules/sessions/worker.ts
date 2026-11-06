@@ -66,6 +66,7 @@ export function sessionCloser(pool: pg.Pool) {
               site,
               key: candidate.visitor_key,
               ipKey: Buffer.alloc(32),
+              clientIp: null,
               now,
               visitor,
               rules: rulesFor(site.config),

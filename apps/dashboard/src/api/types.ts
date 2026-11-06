@@ -43,6 +43,18 @@ export type Visitors = {
   new_share: number | null;
   returning_share: number | null;
 };
+export type Visits = {
+  page: number;
+  page_size: number;
+  total_items: number | null;
+  items: {
+    event_id: string;
+    path: string;
+    at: string;
+    channel: string;
+    client_ip: string | null;
+  }[];
+};
 export type Trend = {
   metric: string;
   granularity: string;
