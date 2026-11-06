@@ -114,7 +114,11 @@ export async function mockDashboard(
     }
     if (path === '/sites') {
       if (method === 'POST') {
-        const created = { ...structuredClone(site), ...req.postDataJSON() };
+        const created = {
+          ...structuredClone(site),
+          ...req.postDataJSON(),
+          site_id: `site_created_${state.sites.length + 1}`,
+        };
         state.sites.push(created);
         return send(created, 201);
       }

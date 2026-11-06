@@ -137,6 +137,12 @@ export function WorkspaceLayout({
                 onChange={selectSite}
               />
             </div>
+            <Button
+              className="create-site-button"
+              onClick={() => navigate('/sites', { create: '1' })}
+            >
+              新建站点
+            </Button>
             <div className="account">
               <span className="account-avatar" aria-hidden="true">
                 {session.username.slice(0, 1).toUpperCase()}

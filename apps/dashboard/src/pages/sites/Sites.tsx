@@ -13,12 +13,13 @@ export function SitesPage({
   sites,
   session,
   navigate,
+  create,
 }: {
   sites: Site[];
   session: Session;
   navigate: Navigate;
+  create: boolean;
 }) {
-  const [create, setCreate] = useState(sites.length === 0);
   return (
     <>
       <div className="page-heading">
@@ -26,7 +27,7 @@ export function SitesPage({
           <p className="eyebrow">让数据各归其位</p>
           <h1>站点管理</h1>
         </div>
-        <Button type="primary" onClick={() => setCreate(!create)}>
+        <Button type="primary" onClick={() => navigate('/sites', { create: create ? '0' : '1' })}>
           {create ? '取消创建' : '新建站点'}
         </Button>
       </div>

@@ -163,7 +163,16 @@ export function App() {
           {path.startsWith('/jobs/') ? (
             <JobPage key={path} id={path.slice(6)} />
           ) : path === '/sites' || (!site && !settingsId) ? (
-            <SitesPage session={session} sites={sites} navigate={navigate} />
+            <SitesPage
+              session={session}
+              sites={sites}
+              navigate={navigate}
+              create={
+                url.searchParams.has('create')
+                  ? url.searchParams.get('create') === '1'
+                  : sites.length === 0
+              }
+            />
           ) : settingsId && site ? (
             <SiteSettingsPage
               key={site.site_id}

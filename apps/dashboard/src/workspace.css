@@ -199,6 +199,9 @@
   width: 18px;
   height: 18px;
 }
+.create-site-button {
+  flex: none;
+}
 .account {
   border-left: 1px solid var(--border);
   padding-left: 20px;
