@@ -20,7 +20,7 @@ jobs:
           POSTGRES_PASSWORD: isolated-ci-fixture
         ports: ['5432:5432']
         options: >-
-          --health-cmd 'pg_isready -U webpulse_ci'
+          --health-cmd "pg_isready -U webpulse_ci"
           --health-interval 5s --health-timeout 3s --health-retries 20
     env:
       DB_HOST: 127.0.0.1
