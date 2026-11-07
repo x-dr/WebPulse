@@ -66,7 +66,7 @@ docker run --rm --network none --user 0:0 --entrypoint node \
 
 脚本只创建不存在的文件；以 root 运行时，新密钥设为 UID/GID `1000:1000`、权限 `0400`，供非 root 容器读取。已有安装丢失密钥时应恢复匹配备份，不要重新生成密钥替代旧材料。
 
-**宿主机已使用 Nginx + acme.sh 时**，按 [Nginx 与 acme.sh 部署](Nginx与acme.sh部署.md) 安装网站证书并配置续期同步、回环端口与真实 IP 转发；完成后继续本节的 journal 证书步骤。该方案保留现有宿主机 Nginx 的公网 80/443。
+**宿主机已有 Nginx + acme.sh 和通配符证书时**，按 [Nginx 与 acme.sh 部署](Nginx与acme.sh部署.md) 复用已安装的证书，并在原续期流程中接入同步脚本；无需重新签发。配套文档还包含回环端口与真实 IP 转发；完成后继续本节的 journal 证书步骤。该方案保留现有宿主机 Nginx 的公网 80/443。
 
 由 Web 容器直接提供公网 HTTPS 时，安装网站证书，将下面两个源路径替换为实际签发文件：
 
@@ -254,7 +254,7 @@ docker compose --env-file .env.production -f compose.yml --profile local-journal
 
 升级不再运行密钥生成、`journal:init` 或管理员创建。迁移失败时保持入口关闭；已执行迁移后，不应仅换回旧镜像尝试回滚，应按匹配备份进行隔离恢复和验证。
 
-宿主机 Nginx + acme.sh 方案由 [续期同步脚本](Nginx与acme.sh部署.md#安装与续期网站证书) 自动安装并重载。手动安装网站证书时，续期后将新文件安装到 `tls/`，保持 UID 1000 可读，然后重新加载容器 Nginx：
+宿主机 Nginx + acme.sh 方案在原续期流程中调用 [证书同步脚本](Nginx与acme.sh部署.md#复用现有通配符证书)，同步共享证书并重载 Web 容器。手动安装网站证书时，续期后将新文件安装到 `tls/`，保持 UID 1000 可读，然后重新加载容器 Nginx：
 
 ```bash
 cd /opt/webpulse

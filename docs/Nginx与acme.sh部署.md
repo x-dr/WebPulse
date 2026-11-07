@@ -1,31 +1,30 @@
 # 宿主机 Nginx 与 acme.sh 部署
 
-适用于宿主机已有 Nginx 和 acme.sh 的情况。本文按 Linux、root 管理的 Nginx/systemd 服务、安装目录 `/opt/webpulse`、示例域名 `stats.example.com` 编写；将域名、证书路径和 acme.sh 路径替换为实际值。
+适用于宿主机已有 Nginx、acme.sh 和已签发通配符证书的情况。直接复用已有证书及续期流程。本文按 Linux、root 管理的 Nginx/systemd 服务、安装目录 `/opt/webpulse`、示例域名 `stats.example.com` 编写；将域名和已有证书路径替换为实际值。
 
 访问链路为：浏览器 → 宿主机 Nginx 的 HTTPS 443 → `https://127.0.0.1:18443` → Web 容器 → API。现有 Web 镜像的 HTTP 8080 入口只负责 HTTPS 跳转，所以回源使用 HTTPS。
 
 先按 [Docker 部署](Docker部署.md) 完成镜像拉取、密钥和目录初始化。网站证书使用下面的流程替代手动复制；本机 journal 的独立证书仍按原文创建。
 
-## 安装与续期网站证书
+## 复用现有通配符证书
 
-保留现有 acme.sh 申请方式。这里假设该域名已签发，证书的稳定安装位置为 `/etc/nginx/ssl/stats.example.com/`。若已安装在其他位置，沿用原路径；不要直接挂载 acme.sh 内部工作目录。
+这里按“通用证书”指 `*.example.com` 通配符证书处理；它可以用于 `stats.example.com`。实际证书也可能包含多个域名，以证书的 SAN 为准。`*.example.com` 本身不覆盖 `example.com` 或 `stats.sub.example.com`，匹配规则见 [RFC 9525](https://www.rfc-editor.org/rfc/rfc9525.html#section-6.3)。
 
-先在应用目录创建同步脚本。脚本将已安装的网站证书复制给 UID 1000 的 Web 容器，并重载宿主机 Nginx 和已运行的 Web 容器。只会更新网站证书，不修改 journal 证书或业务密钥。
+直接使用宿主机 Nginx 当前 `ssl_certificate` 和 `ssl_certificate_key` 指向的完整证书链及私钥，不重新签发，也不为 WebPulse 另建一份 acme.sh 证书记录。下面假设现有路径为 `/etc/nginx/ssl/example.com/fullchain.pem` 和 `/etc/nginx/ssl/example.com/privkey.pem`，请替换为实际路径；使用已经安装好的稳定文件，不直接挂载 acme.sh 内部工作目录。
+
+先在应用目录创建同步脚本。现有 Web 镜像内部也使用 TLS，需要把同一份证书复制给 UID 1000 的 Web 容器。脚本只写入应用自己的 `tls/`，保留共享源证书的权限，并重载已运行的 Web 容器。
 
 ```bash
 cd /opt/webpulse
-cat > ops/reload-site-tls.sh <<'SH'
+cat > ops/sync-site-tls.sh <<'SH'
 #!/bin/sh
 set -eu
 cd /opt/webpulse
 install -d -m 700 -o 1000 -g 1000 tls
 install -m 400 -o 1000 -g 1000 \
-  /etc/nginx/ssl/stats.example.com/fullchain.pem tls/fullchain.pem
+  /etc/nginx/ssl/example.com/fullchain.pem tls/fullchain.pem
 install -m 400 -o 1000 -g 1000 \
-  /etc/nginx/ssl/stats.example.com/privkey.pem tls/privkey.pem
-
-nginx -t
-systemctl reload nginx
+  /etc/nginx/ssl/example.com/privkey.pem tls/privkey.pem
 
 # 首次安装时可能尚未配置 Compose 或启动 Web。
 if [ -f .env.production ]; then
@@ -37,20 +36,19 @@ if [ -f .env.production ]; then
   fi
 fi
 SH
-chmod 700 ops/reload-site-tls.sh
+chmod 700 ops/sync-site-tls.sh
+/bin/sh ops/sync-site-tls.sh
 ```
 
-然后用原来签发该证书的 acme.sh 账号执行安装。下面示例为 root 的 ECC 证书；RSA 证书去掉 `--ecc`，自定义 acme.sh 安装位置时替换命令路径。
+这一步完成首次同步。后续在这张共享证书**已有的续期成功脚本**中，保留原有安装、宿主机 Nginx 重载及其他站点操作，在末尾追加：
 
 ```bash
-install -d -m 700 /etc/nginx/ssl/stats.example.com
-/root/.acme.sh/acme.sh --install-cert -d stats.example.com --ecc \
-  --key-file /etc/nginx/ssl/stats.example.com/privkey.pem \
-  --fullchain-file /etc/nginx/ssl/stats.example.com/fullchain.pem \
-  --reloadcmd '/bin/sh /opt/webpulse/ops/reload-site-tls.sh'
+/bin/sh /opt/webpulse/ops/sync-site-tls.sh
 ```
 
-`--install-cert` 保存安装路径与重载命令，后续成功续期时会再次安装并调用脚本；已有证书无须重新申请。如果该域名原有重载命令还负责其他服务，把原有操作合入脚本后再替换，保留现有续期计划。依据见 [acme.sh 官方安装说明](https://github.com/acmesh-official/acme.sh#3-install-the-certificate-to-apachenginx)。
+如果原来直接使用 `--reloadcmd 'nginx -t && systemctl reload nginx'`，合并后的内容可为 `nginx -t && systemctl reload nginx && /bin/sh /opt/webpulse/ops/sync-site-tls.sh`。按现有共享证书记录和实际回调方式接入，不用针对 `stats.example.com` 的新安装命令覆盖共享证书的安装路径或原有回调。acme.sh 的安装与重载机制见 [官方说明](https://github.com/acmesh-official/acme.sh#3-install-the-certificate-to-apachenginx)。
+
+续期回调需要具备读取源私钥、写入应用目录和执行 Docker 的权限。网站通配符证书仅用于网站入口与 Web 回源；本机 `journal` 服务名不在它的覆盖范围内，继续使用主文档中的独立 journal 证书。
 
 ## 调整容器端口与真实 IP
 
@@ -116,16 +114,13 @@ docker compose --env-file .env.production -f compose.yml \
 
 只修改 WebPulse 域名对应的站点配置，保留其他站点。下面示例使用 `/etc/nginx/conf.d/webpulse.conf`，系统需在 `http` 块中包含该目录；若使用 `sites-enabled`，放到实际启用的位置。
 
-示例假设 Debian/Ubuntu 的 CA 文件位于 `/etc/ssl/certs/ca-certificates.crt`。其他发行版使用实际系统 CA 文件。保留现有 ACME 验证方式；下面的 `/var/www/acme` 仅适用于已使用此 webroot 的配置。
+示例假设 Debian/Ubuntu 的 CA 文件位于 `/etc/ssl/certs/ca-certificates.crt`。其他发行版使用实际系统 CA 文件。现有通配符证书继续按原方式验证和续期，本示例不新增 ACME 验证目录。
 
 ```nginx
 server {
     listen 80;
     server_name stats.example.com;
 
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/acme;
-    }
     location / {
         return 308 https://stats.example.com$request_uri;
     }
@@ -134,8 +129,8 @@ server {
 server {
     listen 443 ssl;
     server_name stats.example.com;
-    ssl_certificate /etc/nginx/ssl/stats.example.com/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/stats.example.com/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/example.com/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/example.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     client_max_body_size 16k;
 
