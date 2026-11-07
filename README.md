@@ -1,6 +1,6 @@
 # WebPulse · 网站脉搏
 
-轻量、自托管的网站流量统计系统。已实现 M0–M4，并交付 M5 本机安全加固与常规回归；压测按用户要求停止，数据库镜像扫描仍阻断生产放行。生产删除必须取得独立加密清单的持久化确认；HTTP 服务只持删除公钥，独立维护进程持私钥。后台支持登录、总览、实时、来源、页面、访客及站点设置。当前验收均为本地隔离环境，详见 [M5 验收](docs/M5加固与验收.md)。
+轻量、自托管的网站流量统计系统。已实现 M0–M4，并交付 M5 本机安全加固与常规回归；压测按用户要求停止，VPS 验收另行执行。数据库加固镜像已在本机通过 HIGH/CRITICAL 扫描，修复后的完整线上发布仍待验证。生产删除必须取得独立加密清单的持久化确认；HTTP 服务只持删除公钥，独立维护进程持私钥。后台支持登录、总览、实时、来源、页面、访客及站点设置。详细证据与边界见 [M5 验收](docs/M5加固与验收.md)。
 
 采用 Node.js 24、pnpm 10、Fastify 5、TypeScript 7.0.2 strict、React 19、Ant Design 6、TanStack Query 与 PostgreSQL 17。ECharts 6 按需懒加载；报表筛选与页面路由共享 URL。实际版本以各 `package.json` 与 `pnpm-lock.yaml` 为准。
 
@@ -27,13 +27,15 @@ pnpm dev
 
 ## GitHub Actions 镜像构建
 
-[Build Docker images](.github/workflows/docker.yml) 仅手动触发，普通 push、PR 或创建 tag 不会自动发布。在 GitHub 的 **Actions → Build Docker images → Run workflow** 选择源码分支，填写 `version`（如 `0.1.0`、`v0.1.0` 或 `0.1.0-rc.1`），即可构建并推送 `linux/amd64`、`linux/arm64` 的 API/Web 镜像到 GHCR。使用仓库自带的 `GITHUB_TOKEN`，无需配置 Docker Hub 凭据；仓库或组织须允许工作流写入 Packages。
+[Build Docker images](.github/workflows/docker.yml) 仅手动触发，普通 push、PR 或创建 tag 不会自动发布。在 GitHub 的 **Actions → Build Docker images → Run workflow** 选择源码分支，填写 `version`（如 `0.1.0`、`v0.1.0` 或 `0.1.0-rc.1`），即可构建并推送 `linux/amd64`、`linux/arm64` 的 API/Web/DB 镜像到 GHCR。使用仓库自带的 `GITHUB_TOKEN`，无需配置 Docker Hub 凭据；仓库或组织须允许工作流写入 Packages。
 
-镜像名自动使用小写的 GitHub 仓库路径：例如 `Owner/WebPulse` 会发布 `ghcr.io/owner/webpulse-api:0.1.0` 与 `ghcr.io/owner/webpulse-web:0.1.0`。每个镜像还包含 `sha-<完整提交 SHA>` 标签；勾选 `latest` 才会额外更新该标签，预发布版本不能勾选。构建完成后，任务摘要提供镜像 digest 和拉取命令；生产优先按 digest 固定镜像。
+镜像名自动使用小写的 GitHub 仓库路径：例如 `Owner/WebPulse` 会发布 `ghcr.io/owner/webpulse-api:0.1.0`、`ghcr.io/owner/webpulse-web:0.1.0` 和 `ghcr.io/owner/webpulse-db:0.1.0`。每个镜像还包含 `sha-<完整提交 SHA>` 标签；勾选 `latest` 才会额外更新该标签，预发布版本不能勾选。构建完成后，任务摘要提供镜像 digest 和拉取命令；生产优先按 digest 固定镜像。
 
-发布前会调用 [Acceptance and security](.github/workflows/acceptance.yml)，执行常规回归、依赖审计及镜像扫描；检查失败就阻止发布。当前 API/Web 扫描通过，PostgreSQL 基础镜像存在未解决的 HIGH/CRITICAL 扫描项，详见 [报告](docs/verification/m5-image-security.json)。该工作流未包含压测，也尚未在线执行。
+发布前会调用 [Acceptance and security](.github/workflows/acceptance.yml)，执行常规回归、依赖审计及全部三个镜像的双架构扫描；数据库镜像另验证初始化和进程降权，任一步失败就阻止发布。原 Bookworm 数据库在 [线上运行](https://github.com/x-dr/WebPulse/actions/runs/42245329276) 中因 75 条 HIGH、4 条 CRITICAL 被阻断。现已基于固定摘要的 PostgreSQL 17.11 Alpine 3.24 构建 DB 镜像，以 `su-exec` 替换带旧 Go 运行时的 `gosu`，保持严格扫描规则；本机 amd64 结果及线上验证边界见 [修复记录](docs/verification/database-image-fix.json)。工作流未包含压测。
 
-工作流文件须先进入默认分支，GitHub 才会显示手动运行入口。首次发布后检查两个 Package 的可见性和仓库访问权限；公开拉取须将 Package 设为 Public，私有镜像须先在目标主机登录 GHCR。把 `.env.production` 的 `WEBPULSE_API_IMAGE`、`WEBPULSE_WEB_IMAGE` 改为本次产物，再按 [部署文档](docs/M4实时与部署.md#github-actions-构建与拉取) 拉取并部署。添加工作流本身不代表镜像已在线发布或通过 ARM64 运行验收。
+首次部署须把 `.env.production` 的 `WEBPULSE_API_IMAGE`、`WEBPULSE_WEB_IMAGE`、`WEBPULSE_DB_IMAGE` 设置为本次三个产物，再按 [部署文档](docs/M4实时与部署.md#github-actions-构建与拉取) 拉取并部署。DB 镜像用于新建数据库；已有 Bookworm 数据不能直接挂载到 Alpine，须先备份并逻辑导出到新数据库后验证。本机 `compose.dev.yml` 继续保留原 Bookworm 和开发数据卷。
+
+工作流文件须先进入默认分支，GitHub 才会显示手动运行入口。首次发布后检查三个 Package 的可见性和仓库访问权限；公开拉取须将 Package 设为 Public，私有镜像须先在目标主机登录 GHCR。添加工作流本身不代表镜像已在线发布或通过 ARM64 运行验收。
 
 ## 健康与迁移
 

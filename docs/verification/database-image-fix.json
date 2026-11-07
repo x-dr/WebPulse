@@ -1,0 +1,107 @@
+{
+  "date": "2026-11-07",
+  "status": "local_amd64_fix_verified_online_validation_pending",
+  "passed": true,
+  "production_accepted": false,
+  "scope": "First production deployment without existing production data; local Linux amd64 build, strict vulnerability scan, PostgreSQL regression and isolated production-container checks.",
+  "source_head": "219c4ea49d994c24bbbd722e79afc62f1a63435e",
+  "changes_committed": false,
+  "original_failure": {
+    "run": "https://github.com/x-dr/WebPulse/actions/runs/42245329276",
+    "job": "https://github.com/x-dr/WebPulse/actions/runs/42245329276/job/127990724740",
+    "image": "postgres:17-bookworm@sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994",
+    "counts": {
+      "HIGH": 75,
+      "CRITICAL": 4
+    },
+    "checks_and_api_web_amd64_arm64_scans": "passed in the linked original run",
+    "publishing": "skipped after database scan failure"
+  },
+  "remediation": {
+    "target": "docker/Dockerfile:db",
+    "base": "postgres:17.11-alpine3.24@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac",
+    "base_platform_manifests": {
+      "linux/amd64": "sha256:4717f90960a225c2d1c5dac50508c401230f693ff626e06e84e6db0a68ded508",
+      "linux/arm64": "sha256:1108a8fe22dff4eab48870e081be046d549ddc1b6f5972e0a766eaf1e0b1003c"
+    },
+    "official_alpine_amd64_baseline": {
+      "os_high_critical": 0,
+      "gosu_high": 25,
+      "gosu_critical": 1,
+      "gosu_go_version": "1.24.6"
+    },
+    "privilege_drop": "Replace gosu with Alpine su-exec 0.3-r0; update docker-entrypoint.sh and docker-ensure-initdb.sh; retain upstream docker-enforce-initdb.sh symlink.",
+    "compose_image_variable": "WEBPULSE_DB_IMAGE",
+    "ci": "Build, initialize and scan db for amd64 and arm64 within images matrix; manual release includes api, web and db.",
+    "development_database": "compose.dev.yml and its Bookworm data volume unchanged",
+    "existing_bookworm_data": "Logical export and restore into a new Alpine database required; no existing PGDATA mounted or migrated."
+  },
+  "scan": {
+    "scanner": "Trivy 0.76.2",
+    "artifact": "webpulse-db:0.1.0-m5",
+    "local_image_id": "sha256:008847091e559a76048d685807d825f509b32f57148a0da7df52dffbab8a1cc7",
+    "platform": "linux/amd64",
+    "vulnerability_database": {
+      "Version": 2,
+      "NextUpdate": "2026-11-07T12:55:02.577403513Z",
+      "UpdatedAt": "2026-11-06T12:55:02.577403897Z",
+      "DownloadedAt": "2026-11-06T15:11:27.547591826Z"
+    },
+    "scanners": ["vuln"],
+    "severity": ["HIGH", "CRITICAL"],
+    "ignore_unfixed": false,
+    "suppressions": [],
+    "counts": {
+      "HIGH": 0,
+      "CRITICAL": 0
+    },
+    "exit_code": 0,
+    "scope": "Package scan of the merged final image; no reachability or lower-severity claims."
+  },
+  "verification": {
+    "postgres": {
+      "passed": 109,
+      "failed": 0,
+      "files": 17,
+      "file_parallelism": false,
+      "limits": "384 MiB memory, 128 MiB shared memory, max_connections=20; random schemas in a task-owned tmpfs database"
+    },
+    "deployment": {
+      "date": "2026-11-07",
+      "scope": "isolated local production containers; self-signed test TLS; separate local journal storage",
+      "passed": true,
+      "checks": [
+        "fresh and repeat database:prepare",
+        "non-root production API and TLS Nginx startup",
+        "TLS login, Secure cookie, static SPA/SDK, forwarded-header overwrite",
+        "unbuffered SSE through TLS proxy",
+        "runtime role cannot DDL, alter migration history or create admins; no decrypt key",
+        "encrypted pg_dump + matching key backup + inventory",
+        "real HTTPS journal acknowledgements and completion records; site and visitor deletion",
+        "database/API/web restart preserves acknowledged facts and deletion state",
+        "actual pg_restore of pre-deletion snapshot, replay of every intent, privacy gaps, production API boots against restored DB",
+        "post-restore maintenance reuses immutable completion sequences and retains privacy gaps"
+      ],
+      "restore_seconds": 12.912,
+      "total_seconds": 52.483,
+      "limits": [
+        "No VPS deployment, trusted public certificate, off-host copy or multi-day retention proof",
+        "RPO/RTO observed only for this small synthetic fixture; full workload in M5"
+      ]
+    },
+    "workflow_database_smoke": "passed using the script extracted from acceptance.yml on amd64; checks initialization, health, PostgreSQL main-process UID and SQL; fixture automatically removed",
+    "main_process_uid": 70,
+    "lint": "passed",
+    "changed_file_prettier": "passed",
+    "actionlint": "1.7.12 passed; optional ShellCheck and pyflakes unavailable",
+    "workflow_bash_syntax": "passed",
+    "production_compose_config": "passed with .env.production.example; no secret values printed",
+    "git_diff_check": "passed"
+  },
+  "not_run": [
+    "Final arm64 image build, scan and runtime: local Docker builder has only amd64 and no ARM64 emulator; configured in CI but not executed after these changes.",
+    "New GitHub Actions run, GHCR publish and VPS deployment: no commit, push, release or deployment requested.",
+    "Application unit, PGlite, frontend/browser suites and application rebuild were not repeated for this deployment-only change; linked original run passed those checks.",
+    "Sustained load, 24-hour stability and full-window recovery acceptance remain unexecuted; prior request to stop load testing preserved."
+  ]
+}

@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [api, web]
+        target: [api, web, db]
     steps:
       - name: Prepare image tags
         id: image

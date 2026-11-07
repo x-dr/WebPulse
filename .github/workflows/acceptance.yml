@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:17-bookworm@sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994
+        image: postgres:17.11-alpine3.24@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
         env:
           POSTGRES_USER: webpulse_ci
           POSTGRES_DB: webpulse_ci
@@ -51,7 +51,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [api, web]
+        target: [api, web, db]
         arch: [amd64, arm64]
     steps:
       - uses: actions/checkout@v7.0.1
@@ -72,25 +72,33 @@ jobs:
           tags: webpulse-${{ matrix.target }}:acceptance
           cache-from: type=gha,scope=webpulse-${{ matrix.target }}-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=webpulse-${{ matrix.target }}-${{ matrix.arch }}
+      - name: Verify database initialization and privilege drop
+        if: matrix.target == 'db'
+        shell: bash
+        run: |
+          set -euo pipefail
+          container="webpulse-db-acceptance-${RANDOM}-${RANDOM}"
+          trap 'docker rm -f "$container" >/dev/null' EXIT
+          docker run -d --name "$container" --platform linux/${{ matrix.arch }} \
+            --mount type=tmpfs,destination=/var/lib/postgresql/data \
+            -e POSTGRES_PASSWORD=isolated-ci-fixture \
+            --health-cmd 'pg_isready -h 127.0.0.1 -U postgres' \
+            --health-interval 1s --health-timeout 3s --health-retries 60 \
+            webpulse-db:acceptance
+          for attempt in {1..60}; do
+            if [[ "$(docker inspect --format '{{.State.Health.Status}}' "$container")" == healthy ]]; then
+              docker exec "$container" sh -c 'test "$(stat -c %u /proc/1)" = "$(id -u postgres)"'
+              docker exec "$container" psql -U postgres -v ON_ERROR_STOP=1 -c 'SELECT 1'
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs "$container"
+          exit 1
       - name: Scan every production image before publishing
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: webpulse-${{ matrix.target }}:acceptance
-          version: v0.76.2
-          scanners: vuln
-          severity: HIGH,CRITICAL
-          ignore-unfixed: false
-          exit-code: '1'
-          format: table
-
-  database-image:
-    needs: checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: postgres:17-bookworm@sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994
           version: v0.76.2
           scanners: vuln
           severity: HIGH,CRITICAL
