@@ -66,7 +66,9 @@ docker run --rm --network none --user 0:0 --entrypoint node \
 
 脚本只创建不存在的文件；以 root 运行时，新密钥设为 UID/GID `1000:1000`、权限 `0400`，供非 root 容器读取。已有安装丢失密钥时应恢复匹配备份，不要重新生成密钥替代旧材料。
 
-安装网站证书，将下面两个源路径替换为实际签发文件：
+**宿主机已使用 Nginx + acme.sh 时**，按 [Nginx 与 acme.sh 部署](Nginx与acme.sh部署.md) 安装网站证书并配置续期同步、回环端口与真实 IP 转发；完成后继续本节的 journal 证书步骤。该方案保留现有宿主机 Nginx 的公网 80/443。
+
+由 Web 容器直接提供公网 HTTPS 时，安装网站证书，将下面两个源路径替换为实际签发文件：
 
 ```bash
 cd /opt/webpulse
@@ -128,7 +130,7 @@ DB_PRIVATE_IP=172.30.88.30
 
 `WEBPULSE_DOMAIN` 只填主机名；`ADMIN_ORIGIN` 必须与浏览器访问的 HTTPS Origin 一致，不带路径。默认私网段若与宿主机、VPN 或其他 Docker 网络冲突，需同时修改网段及三个固定地址。
 
-Compose 将网站端口映射为宿主机 `80 → 8080`、`443 → 8443`；数据库、API 和本机 journal 不发布宿主机端口。生产配置要求 HTTPS，不能直接通过服务器 IP 和 HTTP 完成登录。已有反向代理占用 80/443 时，需要另行规划端口、TLS 和可信代理链；镜像内的 8080 入口只负责 HTTPS 跳转。
+上面配置用于 Web 容器直接提供公网 HTTPS，将网站端口映射为宿主机 `80 → 8080`、`443 → 8443`；数据库、API 和本机 journal 不发布宿主机端口。生产配置要求 HTTPS，不能直接通过服务器 IP 和 HTTP 完成登录。宿主机 Nginx 方案改用 `WEB_BIND_IP=127.0.0.1`、`HTTP_PORT=18080`、`HTTPS_PORT=18443`，其余设置见 [配套文档](Nginx与acme.sh部署.md)。镜像内的 8080 入口只负责 HTTPS 跳转。
 
 检查配置，不输出环境展开内容：
 
@@ -252,7 +254,7 @@ docker compose --env-file .env.production -f compose.yml --profile local-journal
 
 升级不再运行密钥生成、`journal:init` 或管理员创建。迁移失败时保持入口关闭；已执行迁移后，不应仅换回旧镜像尝试回滚，应按匹配备份进行隔离恢复和验证。
 
-网站证书续期后，将新文件安装到 `tls/`，保持 UID 1000 可读，然后重新加载 Nginx：
+宿主机 Nginx + acme.sh 方案由 [续期同步脚本](Nginx与acme.sh部署.md#安装与续期网站证书) 自动安装并重载。手动安装网站证书时，续期后将新文件安装到 `tls/`，保持 UID 1000 可读，然后重新加载容器 Nginx：
 
 ```bash
 cd /opt/webpulse

@@ -6,6 +6,8 @@
 
 使用 `ghcr.io/x-dr/webpulse-db:latest`、`ghcr.io/x-dr/webpulse-web:latest` 和 `ghcr.io/x-dr/webpulse-api:latest` 部署，见 [Docker 镜像部署文档](docs/Docker部署.md)，包含首次初始化、HTTPS、管理员创建、升级和数据保留步骤。
 
+宿主机已有 Nginx 和 acme.sh 时，见 [Nginx 与 acme.sh 部署](docs/Nginx与acme.sh部署.md)，复用现有证书签发方式，并配置续期同步、回环端口及真实 IP 转发。
+
 ## 本地启动
 
 准备 Node.js `24.18.0`（见 `.nvmrc`）、pnpm `10.20.0` 和 Docker Compose。以下命令在仓库根目录运行：
