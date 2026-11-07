@@ -4,6 +4,8 @@
 
 采用 Node.js 24、pnpm 10、Fastify 5、TypeScript 7.0.2 strict、React 19、Ant Design 6、TanStack Query 与 PostgreSQL 17。ECharts 6 按需懒加载；报表筛选与页面路由共享 URL。实际版本以各 `package.json` 与 `pnpm-lock.yaml` 为准。
 
+使用 `ghcr.io/x-dr/webpulse-db:latest`、`ghcr.io/x-dr/webpulse-web:latest` 和 `ghcr.io/x-dr/webpulse-api:latest` 部署，见 [Docker 镜像部署文档](docs/Docker部署.md)，包含首次初始化、HTTPS、管理员创建、升级和数据保留步骤。
+
 ## 本地启动
 
 准备 Node.js `24.18.0`（见 `.nvmrc`）、pnpm `10.20.0` 和 Docker Compose。以下命令在仓库根目录运行：
